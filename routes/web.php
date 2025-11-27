@@ -28,21 +28,23 @@ Route::middleware('guest')->group(function () {
     // Auth Page (Login & Register)
     Route::get('auth', [AuthenticatedSessionController::class, 'index'])->name('auth');
     Route::get('login', fn() => redirect()->route('auth'))->name('login');
-    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+    
+    // Rate Limited Auth Actions (5 attempts per minute)
+    Route::middleware('throttle:5,1')->group(function () {
+        Route::post('login', [AuthenticatedSessionController::class, 'store']);
+        Route::post('register', [RegisterController::class, 'store'])->name('register');
+        Route::post('forgot-password', [PasswordResetController::class, 'verifyEmail'])->name('password.email');
+        Route::post('security-questions/{token}', [PasswordResetController::class, 'verifySecurityQuestions']);
+        Route::post('reset-password', [PasswordResetController::class, 'reset'])->name('password.update');
+    });
 
-    // Validate Referral Code (API)
-    Route::get('api/validate-referral', [RegisterController::class, 'validateReferral']);
+    // Validate Referral Code (API) - Rate limited separately
+    Route::middleware('throttle:10,1')->get('api/validate-referral', [RegisterController::class, 'validateReferral']);
 
-    // Register dengan Referral (wajib)
-    Route::post('register', [RegisterController::class, 'store'])->name('register');
-
-    // Password Reset dengan Security Questions
+    // Password Reset Forms (no rate limit needed for GET)
     Route::get('forgot-password', [PasswordResetController::class, 'create'])->name('password.request');
-    Route::post('forgot-password', [PasswordResetController::class, 'verifyEmail'])->name('password.email');
     Route::get('security-questions/{token}', [PasswordResetController::class, 'showSecurityQuestions'])->name('password.security');
-    Route::post('security-questions/{token}', [PasswordResetController::class, 'verifySecurityQuestions']);
     Route::get('reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
-    Route::post('reset-password', [PasswordResetController::class, 'reset'])->name('password.update');
 });
 
 // Setup Security (untuk user baru yang belum setup)
