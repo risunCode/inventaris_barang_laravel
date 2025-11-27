@@ -1,6 +1,6 @@
 # 🏢 Sistem Inventaris Barang - Kabupaten Kubu Raya
 
-**Version: 0.0.2-beta** 🎉
+**Version: 0.0.4-beta** 🎉
 
 Sistem manajemen inventaris barang yang komprehensif untuk pemerintah daerah, dibangun dengan Laravel 12 dan teknologi modern.
 
@@ -69,7 +69,7 @@ Sistem manajemen inventaris barang yang komprehensif untuk pemerintah daerah, di
 
 ## Version History
 
-### v0.0.2-beta (Current) - 27 Nov 2025
+### v0.0.4-beta (Current) - 27 Nov 2025
 **Bug Fixes & Improvements**
 - Fix modal flash issue on page load (display:none approach)
 - Fix security questions validation (integer column issue)
