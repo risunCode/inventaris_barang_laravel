@@ -7,7 +7,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Pertanyaan keamanan yang dapat dipilih user untuk reset password.
-    | User harus memilih 2 pertanyaan yang berbeda.
+    | User bisa memilih dari daftar atau membuat pertanyaan custom (value 0).
     |
     */
 
@@ -30,7 +30,7 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'required_questions' => 2,
+    'required_questions' => 1,
 
     /*
     |--------------------------------------------------------------------------

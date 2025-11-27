@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\ReferralCode;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -108,36 +109,41 @@ class RegisterController extends Controller
     }
 
     /**
-     * Simpan security questions.
+     * Simpan security question.
      */
     public function storeSetupSecurity(Request $request): RedirectResponse
     {
         $securityQuestions = config('security_questions.questions');
+        $validKeys = array_merge([0], array_keys($securityQuestions)); // 0 = custom
 
         $validated = $request->validate([
             'birth_date' => ['required', 'date', 'before:today'],
-            'security_question_1' => ['required', 'integer', 'in:' . implode(',', array_keys($securityQuestions))],
-            'security_answer_1' => ['required', 'string', 'max:255'],
-            'security_question_2' => ['required', 'integer', 'in:' . implode(',', array_keys($securityQuestions)), 'different:security_question_1'],
-            'security_answer_2' => ['required', 'string', 'max:255'],
-            'custom_question' => ['nullable', 'string', 'max:255'],
-            'custom_answer' => ['nullable', 'required_with:custom_question', 'string', 'max:255'],
+            'security_question_1' => ['required', 'in:' . implode(',', $validKeys)],
+            'custom_security_question' => ['required_if:security_question_1,0', 'nullable', 'string', 'max:255'],
+            'security_answer_1' => ['required', 'string', 'min:3', 'max:255'],
         ], [
-            'security_question_2.different' => 'Pertanyaan kedua harus berbeda dengan pertanyaan pertama.',
+            'custom_security_question.required_if' => 'Tulis pertanyaan custom Anda.',
+            'security_answer_1.min' => 'Jawaban minimal 3 karakter.',
         ]);
 
         $user = Auth::user();
+        $questionValue = (int) $validated['security_question_1'];
 
-        $user->update([
+        $updateData = [
             'birth_date' => $validated['birth_date'],
-            'security_question_1' => $validated['security_question_1'],
+            'security_question_1' => $questionValue,
             'security_answer_1' => Hash::make(strtolower(trim($validated['security_answer_1']))),
-            'security_question_2' => $validated['security_question_2'],
-            'security_answer_2' => Hash::make(strtolower(trim($validated['security_answer_2']))),
-            'custom_security_question' => $validated['custom_question'],
-            'custom_security_answer' => $validated['custom_answer'] ? Hash::make(strtolower(trim($validated['custom_answer']))) : null,
             'security_setup_completed' => true,
-        ]);
+        ];
+
+        // Handle custom question (0 = custom)
+        if ($questionValue === 0) {
+            $updateData['custom_security_question'] = trim($validated['custom_security_question']);
+        } else {
+            $updateData['custom_security_question'] = null;
+        }
+
+        $user->update($updateData);
 
         ActivityLog::log('security_setup', 'Setup keamanan akun selesai');
 

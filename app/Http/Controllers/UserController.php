@@ -117,17 +117,13 @@ class UserController extends Controller implements HasMiddleware
         }
 
         $userData = [
-            'name' => $validated['name'],
-            'email' => $validated['email'],
+            'name' => trim($validated['name']),
+            'email' => strtolower(trim($validated['email'])),
             'password' => Hash::make($validated['password']),
-            'phone' => $validated['phone'],
+            'phone' => $validated['phone'] ? trim($validated['phone']) : null,
             'is_active' => $request->boolean('is_active', true),
             'referred_by' => $referrerId,
-            // Default security questions for modal creation
-            'security_question_1' => 1,
-            'security_answer_1' => Hash::make('default'),
-            'security_question_2' => 2,
-            'security_answer_2' => Hash::make('default'),
+            'security_setup_completed' => false, // User harus setup security saat login pertama
         ];
 
         $user = User::create($userData);

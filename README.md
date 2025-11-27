@@ -89,10 +89,15 @@ Sistem manajemen inventaris barang yang komprehensif untuk pemerintah daerah, di
 - Confirm dialogs untuk delete actions
 - Halaman: users, categories, locations, referral-codes, profile
 
-**Security Questions**
-- Birth date verification modal
-- Security question modal dengan custom option
-- Support untuk pertanyaan custom (value=0)
+**Security Improvements**
+- Simplify ke 1 security question (hapus question 2)
+- Tambah support untuk custom security question (value=0)
+- Hapus hardcoded default security answers di UserController
+- Tambah `verifySecurityAnswer()` method dengan case-insensitive check
+- Tambah `hasSecurityQuestion()` helper method
+- Input sanitization (trim, lowercase) untuk security answers
+- Audit trail untuk security question updates
+- Birth date verification modal sebelum update security
 
 ### v0.0.1-beta
 - Complete inventory management system

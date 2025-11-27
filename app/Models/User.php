@@ -31,10 +31,7 @@ class User extends Authenticatable
         'referred_by',
         'security_question_1',
         'security_answer_1',
-        'security_question_2',
-        'security_answer_2',
         'custom_security_question',
-        'custom_security_answer',
         'security_setup_completed',
     ];
 
@@ -83,7 +80,6 @@ class User extends Authenticatable
         'password',
         'remember_token',
         'security_answer_1',
-        'security_answer_2',
     ];
 
     /**
@@ -101,30 +97,34 @@ class User extends Authenticatable
     }
 
     /**
-     * Cek apakah user sudah setup security questions.
+     * Cek apakah user sudah setup security question.
      */
-    public function hasSecurityQuestions(): bool
+    public function hasSecurityQuestion(): bool
     {
-        return !empty($this->security_question_1) && !empty($this->security_answer_1)
-            && !empty($this->security_question_2) && !empty($this->security_answer_2);
+        return !empty($this->security_question_1) && !empty($this->security_answer_1);
     }
 
     /**
-     * Get pertanyaan keamanan 1.
+     * Verify security answer (case-insensitive).
      */
-    public function getSecurityQuestion1TextAttribute(): ?string
+    public function verifySecurityAnswer(string $answer): bool
     {
+        return \Illuminate\Support\Facades\Hash::check(
+            strtolower(trim($answer)),
+            $this->security_answer_1
+        );
+    }
+
+    /**
+     * Get pertanyaan keamanan text.
+     */
+    public function getSecurityQuestionTextAttribute(): ?string
+    {
+        if ($this->security_question_1 === 0) {
+            return $this->custom_security_question;
+        }
         $questions = config('security_questions.questions');
         return $questions[$this->security_question_1] ?? null;
-    }
-
-    /**
-     * Get pertanyaan keamanan 2.
-     */
-    public function getSecurityQuestion2TextAttribute(): ?string
-    {
-        $questions = config('security_questions.questions');
-        return $questions[$this->security_question_2] ?? null;
     }
 
     /**
