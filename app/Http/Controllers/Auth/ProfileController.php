@@ -60,6 +60,7 @@ class ProfileController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'phone' => ['nullable', 'string', 'max:20'],
+            'birth_date' => ['nullable', 'date'],
             'avatar' => ['nullable', 'image', 'max:2048'],
         ]);
 
@@ -101,22 +102,35 @@ class ProfileController extends Controller
     public function updateSecurity(Request $request): RedirectResponse
     {
         $questions = config('security_questions.questions');
+        $validKeys = array_merge(array_keys($questions), [0]); // 0 = custom
 
         $validated = $request->validate([
-            'security_question_1' => ['required', 'integer', 'in:' . implode(',', array_keys($questions))],
+            'security_question_1' => ['required', 'in:' . implode(',', $validKeys)],
+            'custom_security_question' => ['required_if:security_question_1,0', 'nullable', 'string', 'max:255'],
             'security_answer_1' => ['required', 'string', 'max:255'],
-            'security_question_2' => ['required', 'integer', 'in:' . implode(',', array_keys($questions)), 'different:security_question_1'],
-            'security_answer_2' => ['required', 'string', 'max:255'],
         ], [
-            'security_question_2.different' => 'Pertanyaan kedua harus berbeda dengan pertanyaan pertama.',
+            'security_question_1.required' => 'Pilih pertanyaan keamanan.',
+            'custom_security_question.required_if' => 'Tulis pertanyaan custom Anda.',
+            'security_answer_1.required' => 'Masukkan jawaban keamanan.',
         ]);
 
-        Auth::user()->update([
-            'security_question_1' => $validated['security_question_1'],
+        $user = Auth::user();
+        
+        $questionValue = (int) $validated['security_question_1'];
+        
+        $updateData = [
+            'security_question_1' => $questionValue,
             'security_answer_1' => Hash::make(strtolower(trim($validated['security_answer_1']))),
-            'security_question_2' => $validated['security_question_2'],
-            'security_answer_2' => Hash::make(strtolower(trim($validated['security_answer_2']))),
-        ]);
+        ];
+
+        // Handle custom question (0 = custom)
+        if ($questionValue === 0) {
+            $updateData['custom_security_question'] = $validated['custom_security_question'];
+        } else {
+            $updateData['custom_security_question'] = null;
+        }
+
+        $user->update($updateData);
 
         return back()->with('success', 'Pertanyaan keamanan berhasil diperbarui.');
     }

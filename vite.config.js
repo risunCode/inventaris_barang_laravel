@@ -10,4 +10,20 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
+    build: {
+        // Optimize chunk size
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    vendor: ['alpinejs'],
+                },
+            },
+        },
+        // Use esbuild for faster minification (built-in)
+        minify: 'esbuild',
+        // Generate source maps only in dev
+        sourcemap: false,
+        // Optimize CSS
+        cssMinify: true,
+    },
 });

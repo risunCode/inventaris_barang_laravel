@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Alpine.js cloak - hide elements until Alpine initializes */
+[x-cloak] { display: none !important; }
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
@@ -148,16 +151,36 @@ body {
     }
 
     /* Form Input */
-    .form-input {
-        @apply block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed;
+    .form-input,
+    .input {
+        @apply block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm placeholder-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors;
+        background-color: var(--bg-input);
+        border-color: var(--border-color);
+        color: var(--text-primary);
     }
 
-    .form-select {
-        @apply block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed;
+    .input::placeholder {
+        color: var(--text-secondary);
     }
 
-    .form-textarea {
-        @apply block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 resize-none;
+    .form-select,
+    select.input {
+        @apply block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors;
+        background-color: var(--bg-input);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .form-textarea,
+    textarea.input {
+        @apply block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm placeholder-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none resize-none transition-colors;
+        background-color: var(--bg-input);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+
+    textarea.input::placeholder {
+        color: var(--text-secondary);
     }
 
     .form-label {

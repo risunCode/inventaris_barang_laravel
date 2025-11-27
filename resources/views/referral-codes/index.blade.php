@@ -125,8 +125,8 @@
     </div>
 
     <!-- Create Modal -->
-    <div id="createModal-backdrop" class="modal-backdrop"></div>
-    <div id="createModal" class="modal-content w-full max-w-md rounded-xl p-6" style="background-color: var(--bg-card);">
+    <div id="createModal-backdrop" class="modal-backdrop" style="display:none;"></div>
+    <div id="createModal" class="modal-content w-full max-w-md rounded-xl p-6" style="display:none; background-color: var(--bg-card);">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold" style="color: var(--text-primary);">Buat Kode Referral</h3>
             <button onclick="closeModal('createModal')" class="p-1 rounded hover:bg-gray-100">
@@ -165,8 +165,8 @@
     </div>
 
     <!-- Edit Modal -->
-    <div id="editModal-backdrop" class="modal-backdrop"></div>
-    <div id="editModal" class="modal-content w-full max-w-md rounded-xl p-6" style="background-color: var(--bg-card);">
+    <div id="editModal-backdrop" class="modal-backdrop" style="display:none;"></div>
+    <div id="editModal" class="modal-content w-full max-w-md rounded-xl p-6" style="display:none; background-color: var(--bg-card);">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold" style="color: var(--text-primary);">Edit Kode Referral</h3>
             <button onclick="closeModal('editModal')" class="p-1 rounded hover:bg-gray-100">
@@ -206,18 +206,15 @@
         </form>
     </div>
 
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         const csrfToken = '{{ csrf_token() }}';
+        const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
 
         function copyCode(code) {
             navigator.clipboard.writeText(code).then(() => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Tersalin!',
-                    text: 'Kode referral berhasil disalin',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
+                Toast.fire({ icon: 'success', title: 'Kode berhasil disalin!' });
             });
         }
 
@@ -260,21 +257,13 @@
                 const data = await res.json();
                 
                 if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: data.message,
-                        confirmButtonColor: 'var(--accent-color)',
-                    }).then(() => location.reload());
+                    Toast.fire({ icon: 'success', title: 'Kode referral berhasil dibuat!' });
+                    setTimeout(() => location.reload(), 1000);
                 } else {
                     throw new Error(data.message);
                 }
             } catch (err) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal!',
-                    text: err.message || 'Terjadi kesalahan',
-                });
+                Swal.fire({ icon: 'error', title: 'Gagal!', text: err.message || 'Terjadi kesalahan' });
             }
         }
 
@@ -304,64 +293,45 @@
                 const data = await res.json();
                 
                 if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: data.message,
-                        confirmButtonColor: 'var(--accent-color)',
-                    }).then(() => location.reload());
+                    Toast.fire({ icon: 'success', title: 'Kode referral berhasil diupdate!' });
+                    setTimeout(() => location.reload(), 1000);
                 } else {
                     throw new Error(data.message);
                 }
             } catch (err) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal!',
-                    text: err.message || 'Terjadi kesalahan',
-                });
+                Swal.fire({ icon: 'error', title: 'Gagal!', text: err.message || 'Terjadi kesalahan' });
             }
         }
 
         async function toggleCode(id, currentStatus) {
             const action = currentStatus ? 'menonaktifkan' : 'mengaktifkan';
-            
             const result = await Swal.fire({
                 title: 'Konfirmasi',
                 text: `Yakin ingin ${action} kode referral ini?`,
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: 'var(--accent-color)',
-                cancelButtonText: 'Batal',
-                confirmButtonText: 'Ya, lanjutkan',
+                confirmButtonText: 'Ya',
+                cancelButtonText: 'Batal'
             });
             
-            if (result.isConfirmed) {
-                try {
-                    const res = await fetch(`/admin/referral-codes/${id}/toggle`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': csrfToken,
-                            'Accept': 'application/json',
-                        },
-                    });
-                    const data = await res.json();
-                    
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil!',
-                            text: data.message,
-                            timer: 1500,
-                            showConfirmButton: false,
-                        }).then(() => location.reload());
-                    }
-                } catch (err) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal!',
-                        text: 'Terjadi kesalahan',
-                    });
+            if (!result.isConfirmed) return;
+            
+            try {
+                const res = await fetch(`/admin/referral-codes/${id}/toggle`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    Toast.fire({ icon: 'success', title: data.message || 'Status berhasil diubah!' });
+                    setTimeout(() => location.reload(), 1000);
                 }
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Gagal!', text: 'Terjadi kesalahan' });
             }
         }
 
@@ -372,38 +342,35 @@
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Hapus!',
                 cancelButtonText: 'Batal',
-                confirmButtonText: 'Ya, hapus!',
+                reverseButtons: true
             });
             
-            if (result.isConfirmed) {
-                try {
-                    const res = await fetch(`/admin/referral-codes/${id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': csrfToken,
-                            'Accept': 'application/json',
-                        },
-                    });
-                    const data = await res.json();
-                    
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Terhapus!',
-                            text: data.message,
-                            timer: 1500,
-                            showConfirmButton: false,
-                        }).then(() => location.reload());
-                    }
-                } catch (err) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal!',
-                        text: 'Terjadi kesalahan',
-                    });
+            if (!result.isConfirmed) return;
+            
+            try {
+                const res = await fetch(`/admin/referral-codes/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    Toast.fire({ icon: 'success', title: 'Kode berhasil dihapus!' });
+                    setTimeout(() => location.reload(), 1000);
                 }
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Gagal!', text: 'Terjadi kesalahan' });
             }
         }
+
+        @if(session()->has('success') && session('success'))
+        Toast.fire({ icon: 'success', title: '{{ session("success") }}' });
+        @endif
     </script>
 </x-app-layout>

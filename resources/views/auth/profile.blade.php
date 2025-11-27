@@ -100,52 +100,39 @@
                     </h3>
                     <p class="text-sm mb-4" style="color: var(--text-secondary);">Pertanyaan keamanan digunakan untuk verifikasi saat reset password</p>
                     
-                    <form action="{{ route('profile.security') }}" method="POST">
-                        @csrf @method('PUT')
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            <!-- Pertanyaan Template -->
+                    <!-- Status Pertanyaan Keamanan -->
+                    <div class="p-4 rounded-lg mb-4" style="background-color: var(--bg-input);">
+                        <div class="flex items-center justify-between">
                             <div>
-                                <label class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">Pertanyaan Keamanan</label>
-                                <select name="security_question_1" class="w-full px-4 py-2 rounded-lg border" style="background-color: var(--bg-input); border-color: var(--border-color); color: var(--text-primary);">
-                                    <option value="">Pilih pertanyaan...</option>
-                                    @foreach($securityQuestions ?? [] as $key => $question)
-                                    <option value="{{ $key }}" {{ $user->security_question_1 == $key ? 'selected' : '' }}>{{ $question }}</option>
-                                    @endforeach
-                                    <option value="custom" {{ $user->security_question_1 == 'custom' ? 'selected' : '' }}>Tulis pertanyaan sendiri...</option>
-                                </select>
+                                <p class="font-medium" style="color: var(--text-primary);">
+                                    @if($user->security_question_1)
+                                        <span class="inline-flex items-center gap-1 text-green-600">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            Pertanyaan keamanan sudah diatur
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 text-amber-600">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                            Pertanyaan keamanan belum diatur
+                                        </span>
+                                    @endif
+                                </p>
+                                <p class="text-xs mt-1" style="color: var(--text-secondary);">Verifikasi tanggal lahir untuk mengubah pertanyaan keamanan</p>
                             </div>
-                            
-                            <!-- Custom Question Input (hidden by default) -->
-                            <div id="custom-question-wrapper" class="{{ $user->security_question_1 == 'custom' ? '' : 'hidden' }}">
-                                <label class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">Pertanyaan Custom</label>
-                                <input type="text" name="custom_security_question" value="{{ $user->custom_security_question ?? '' }}" placeholder="Tulis pertanyaan Anda sendiri..." class="w-full px-4 py-2 rounded-lg border" style="background-color: var(--bg-input); border-color: var(--border-color); color: var(--text-primary);">
-                            </div>
-                            
-                            <!-- Jawaban -->
-                            <div class="{{ $user->security_question_1 == 'custom' ? '' : 'md:col-span-2' }}" id="answer-wrapper">
-                                <label class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">Jawaban Keamanan</label>
-                                <input type="text" name="security_answer_1" placeholder="Masukkan jawaban..." class="w-full px-4 py-2 rounded-lg border" style="background-color: var(--bg-input); border-color: var(--border-color); color: var(--text-primary);" required>
-                            </div>
+                            <button type="button" onclick="openVerifyBirthModal()" class="btn btn-primary text-sm">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                Ubah
+                            </button>
                         </div>
-                        
-                        <p class="text-xs mb-4 p-3 rounded-lg" style="background-color: var(--bg-input); color: var(--text-secondary);">
-                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            Jawaban bersifat case-insensitive. Kombinasikan dengan tanggal lahir untuk keamanan lebih baik.
-                        </p>
-                        
-                        <button type="submit" class="btn btn-primary">
-                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                            Simpan Keamanan
-                        </button>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Crop Modal -->
-    <div id="crop-modal-backdrop" class="modal-backdrop"></div>
-    <div id="crop-modal" class="modal-content w-full max-w-lg">
+    <div id="crop-modal-backdrop" class="modal-backdrop" style="display:none;"></div>
+    <div id="crop-modal" class="modal-content w-full max-w-lg" style="display:none;">
         <div class="rounded-2xl shadow-2xl border overflow-hidden" style="background-color: var(--bg-card); border-color: var(--border-color);">
             <div class="p-4 border-b flex items-center justify-between" style="border-color: var(--border-color);">
                 <h3 class="text-lg font-semibold" style="color: var(--text-primary);">Crop Foto Profil</h3>
@@ -181,24 +168,116 @@
         </div>
     </div>
 
+    <!-- Verify Birth Date Modal -->
+    <x-modal name="verifyBirthModal" title="Verifikasi Identitas" maxWidth="sm">
+        <div class="text-center mb-4">
+            <div class="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center" style="background-color: var(--bg-input);">
+                <svg class="w-8 h-8" style="color: var(--accent-color);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <p class="text-sm" style="color: var(--text-secondary);">Masukkan tanggal lahir Anda untuk melanjutkan</p>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Tanggal Lahir</label>
+                <input type="date" id="verify-birth-date" class="input w-full" required>
+            </div>
+            <p id="verify-error" class="text-sm text-red-500 hidden">Tanggal lahir tidak sesuai</p>
+        </div>
+        <div class="flex gap-2 mt-6">
+            <button type="button" onclick="closeModal('verifyBirthModal')" class="btn btn-outline flex-1">Batal</button>
+            <button type="button" onclick="verifyBirthDate()" class="btn btn-primary flex-1">Verifikasi</button>
+        </div>
+    </x-modal>
+
+    <!-- Security Questions Modal -->
+    <x-modal name="securityModal" title="Ubah Pertanyaan Keamanan" maxWidth="lg">
+        <form id="securityForm" action="{{ route('profile.security') }}" method="POST">
+            @csrf @method('PUT')
+            <div class="space-y-4">
+                <!-- Pertanyaan Template -->
+                <div>
+                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Pertanyaan Keamanan</label>
+                    <select name="security_question_1" id="securityQuestion" class="input w-full" onchange="toggleCustomQuestion()">
+                        <option value="">Pilih pertanyaan...</option>
+                        @foreach($securityQuestions ?? [] as $key => $question)
+                        <option value="{{ $key }}" {{ $user->security_question_1 == $key ? 'selected' : '' }}>{{ $question }}</option>
+                        @endforeach
+                        <option value="0" {{ $user->security_question_1 === 0 ? 'selected' : '' }}>Tulis pertanyaan sendiri...</option>
+                    </select>
+                </div>
+                
+                <!-- Custom Question Input -->
+                <div id="customQuestionWrapper" class="{{ $user->security_question_1 === 0 ? '' : 'hidden' }}">
+                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Pertanyaan Custom</label>
+                    <input type="text" name="custom_security_question" id="customQuestion" value="{{ $user->custom_security_question ?? '' }}" placeholder="Tulis pertanyaan Anda sendiri..." class="input w-full">
+                </div>
+                
+                <!-- Jawaban -->
+                <div>
+                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Jawaban Keamanan <span class="text-red-500">*</span></label>
+                    <input type="text" name="security_answer_1" placeholder="Masukkan jawaban..." class="input w-full" required>
+                    <p class="text-xs mt-1" style="color: var(--text-secondary);">Jawaban bersifat case-insensitive</p>
+                </div>
+            </div>
+            <div class="flex gap-2 mt-6">
+                <button type="button" onclick="closeModal('securityModal')" class="btn btn-outline flex-1">Batal</button>
+                <button type="submit" class="btn btn-primary flex-1">Simpan</button>
+            </div>
+        </form>
+    </x-modal>
+
 @push('scripts')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 let cropper = null;
+const userBirthDate = '{{ $user->birth_date?->format("Y-m-d") ?? "" }}';
+const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
 
-// Toggle custom question input
-document.querySelector('select[name="security_question_1"]').addEventListener('change', function() {
-    const wrapper = document.getElementById('custom-question-wrapper');
-    const answerWrapper = document.getElementById('answer-wrapper');
-    if (this.value === 'custom') {
+// Show session messages
+@if(session()->has('success') && session('success'))
+Toast.fire({ icon: 'success', title: '{{ session("success") }}' });
+@endif
+@if(session()->has('error') && session('error'))
+Toast.fire({ icon: 'error', title: '{{ session("error") }}' });
+@endif
+
+// Verify Birth Date Modal
+function openVerifyBirthModal() {
+    if (!userBirthDate) {
+        alert('Silakan atur tanggal lahir Anda terlebih dahulu di bagian Informasi Profil.');
+        return;
+    }
+    document.getElementById('verify-birth-date').value = '';
+    document.getElementById('verify-error').classList.add('hidden');
+    openModal('verifyBirthModal');
+}
+
+function verifyBirthDate() {
+    const inputDate = document.getElementById('verify-birth-date').value;
+    const errorEl = document.getElementById('verify-error');
+    
+    if (inputDate === userBirthDate) {
+        closeModal('verifyBirthModal');
+        openModal('securityModal');
+    } else {
+        errorEl.classList.remove('hidden');
+    }
+}
+
+// Toggle custom question
+function toggleCustomQuestion() {
+    const select = document.getElementById('securityQuestion');
+    const wrapper = document.getElementById('customQuestionWrapper');
+    if (select.value === '0') {
         wrapper.classList.remove('hidden');
-        answerWrapper.classList.remove('md:col-span-2');
     } else {
         wrapper.classList.add('hidden');
-        answerWrapper.classList.add('md:col-span-2');
     }
-});
+}
 
 function openCropModal(input) {
     if (input.files && input.files[0]) {
@@ -207,8 +286,13 @@ function openCropModal(input) {
             const img = document.getElementById('crop-image');
             img.src = e.target.result;
             
-            document.getElementById('crop-modal-backdrop').classList.add('active');
-            document.getElementById('crop-modal').classList.add('active');
+            const backdrop = document.getElementById('crop-modal-backdrop');
+            const modal = document.getElementById('crop-modal');
+            backdrop.style.display = 'block';
+            modal.style.display = 'block';
+            void modal.offsetWidth;
+            backdrop.classList.add('active');
+            modal.classList.add('active');
             document.body.style.overflow = 'hidden';
             
             if (cropper) cropper.destroy();
@@ -237,9 +321,15 @@ function openCropModal(input) {
 }
 
 function closeCropModal() {
-    document.getElementById('crop-modal-backdrop').classList.remove('active');
-    document.getElementById('crop-modal').classList.remove('active');
+    const backdrop = document.getElementById('crop-modal-backdrop');
+    const modal = document.getElementById('crop-modal');
+    backdrop.classList.remove('active');
+    modal.classList.remove('active');
     document.body.style.overflow = '';
+    setTimeout(() => {
+        backdrop.style.display = 'none';
+        modal.style.display = 'none';
+    }, 200);
     document.getElementById('photo-input').value = '';
     if (cropper) {
         cropper.destroy();
@@ -249,15 +339,6 @@ function closeCropModal() {
 
 function uploadCroppedImage() {
     if (!cropper) return;
-    
-    Swal.fire({
-        title: 'Mengupload...',
-        text: 'Mohon tunggu sebentar',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        showConfirmButton: false,
-        didOpen: () => Swal.showLoading()
-    });
     
     cropper.getCroppedCanvas({
         width: 256,
@@ -280,20 +361,14 @@ function uploadCroppedImage() {
         }).then(response => response.json())
         .then(data => {
             if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    text: data.message || 'Foto profil berhasil diperbarui',
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => window.location.reload());
+                window.location.reload();
             } else {
-                Swal.fire({ icon: 'error', title: 'Gagal!', text: data.message || 'Gagal mengupload foto.' });
+                alert('Gagal: ' + (data.message || 'Gagal mengupload foto.'));
                 closeCropModal();
             }
         }).catch(error => {
             console.error('Upload error:', error);
-            Swal.fire({ icon: 'error', title: 'Error!', text: 'Terjadi kesalahan saat upload.' });
+            alert('Error: Terjadi kesalahan saat upload.');
             closeCropModal();
         });
     }, 'image/jpeg', 0.9);

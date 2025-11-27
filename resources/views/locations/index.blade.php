@@ -99,88 +99,97 @@
         @endif
     </div>
     <!-- Create Modal -->
-    <x-modal name="createModal" title="Tambah Lokasi" maxWidth="md">
+    <x-modal name="createModal" title="Tambah Lokasi Baru" maxWidth="2xl">
         <form id="createForm" action="{{ route('locations.store') }}" method="POST">
             @csrf
-            <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Nama Lokasi</label>
-                    <input type="text" name="name" id="createName" class="input" autocomplete="organization" required>
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Nama Lokasi <span class="text-red-500">*</span></label>
+                    <input type="text" name="name" id="createName" class="input w-full" autocomplete="organization" required placeholder="Contoh: Ruang Server Lt.2">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Kode</label>
-                    <input type="text" name="code" id="createCode" class="input" autocomplete="off" placeholder="Otomatis jika kosong">
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Kode Lokasi <span class="text-xs" style="color: var(--text-secondary);">(otomatis jika kosong)</span></label>
+                    <input type="text" name="code" id="createCode" class="input w-full" autocomplete="off" placeholder="LOK-001">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Deskripsi</label>
-                    <textarea name="description" id="createDescription" class="input" rows="2" autocomplete="off"></textarea>
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">PIC (Person in Charge)</label>
+                    <input type="text" name="pic" id="createPic" class="input w-full" autocomplete="name" placeholder="Nama penanggung jawab lokasi">
+                </div>
+                <div class="flex items-center pt-6">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_active" id="createIsActive" value="1" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                        <span class="ms-3 text-sm font-medium" style="color: var(--text-primary);">Status Aktif</span>
+                    </label>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Alamat</label>
-                    <textarea name="address" id="createAddress" class="input" rows="2" autocomplete="street-address"></textarea>
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Deskripsi</label>
+                    <textarea name="description" id="createDescription" class="input w-full" rows="3" autocomplete="off" placeholder="Keterangan tentang lokasi ini..."></textarea>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">PIC</label>
-                    <input type="text" name="pic" id="createPic" class="input" autocomplete="name" placeholder="Person in Charge">
-                </div>
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" name="is_active" id="createIsActive" value="1" class="rounded" checked>
-                    <label for="createIsActive" class="text-sm" style="color: var(--text-primary);">Aktif</label>
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Alamat Lengkap</label>
+                    <textarea name="address" id="createAddress" class="input w-full" rows="3" autocomplete="street-address" placeholder="Jl. Contoh No. 123, Kota..."></textarea>
                 </div>
             </div>
-            <div class="flex gap-2 mt-6">
+            <div class="flex gap-3 mt-6 pt-4 border-t" style="border-color: var(--border-color);">
                 <button type="button" onclick="closeModal('createModal')" class="btn btn-outline flex-1">Batal</button>
-                <button type="submit" class="btn btn-primary flex-1">Simpan</button>
+                <button type="submit" class="btn btn-primary flex-1">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Simpan
+                </button>
             </div>
         </form>
     </x-modal>
 
     <!-- Edit Modal -->
-    <div id="editModal-backdrop" class="modal-backdrop"></div>
-    <div id="editModal" class="modal-content w-full max-w-md rounded-xl p-6" style="background-color: var(--bg-card);">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold" style="color: var(--text-primary);">Edit Lokasi</h3>
-            <button onclick="closeModal('editModal')" class="p-1 rounded hover:bg-gray-100">
-                <svg class="w-5 h-5" style="color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-        </div>
+    <x-modal name="editModal" title="Edit Lokasi" maxWidth="2xl">
         <form id="editForm" method="POST">
             @csrf
             @method('PUT')
-            <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Nama Lokasi</label>
-                    <input type="text" name="name" id="editName" class="input" autocomplete="organization" required>
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Nama Lokasi <span class="text-red-500">*</span></label>
+                    <input type="text" name="name" id="editName" class="input w-full" autocomplete="organization" required placeholder="Nama lokasi">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Kode</label>
-                    <input type="text" name="code" id="editCode" class="input" autocomplete="off">
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Kode Lokasi</label>
+                    <input type="text" name="code" id="editCode" class="input w-full" autocomplete="off" placeholder="LOK-001">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Deskripsi</label>
-                    <textarea name="description" id="editDescription" class="input" rows="2" autocomplete="off"></textarea>
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">PIC (Person in Charge)</label>
+                    <input type="text" name="pic" id="editPic" class="input w-full" autocomplete="name" placeholder="Nama penanggung jawab lokasi">
+                </div>
+                <div class="flex items-center pt-6">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_active" id="editIsActive" value="1" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                        <span class="ms-3 text-sm font-medium" style="color: var(--text-primary);">Status Aktif</span>
+                    </label>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Alamat</label>
-                    <textarea name="address" id="editAddress" class="input" rows="2" autocomplete="street-address"></textarea>
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Deskripsi</label>
+                    <textarea name="description" id="editDescription" class="input w-full" rows="3" autocomplete="off" placeholder="Keterangan tentang lokasi ini..."></textarea>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">PIC</label>
-                    <input type="text" name="pic" id="editPic" class="input" autocomplete="name">
-                </div>
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" name="is_active" id="editIsActive" value="1" class="rounded">
-                    <label for="editIsActive" class="text-sm" style="color: var(--text-primary);">Aktif</label>
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Alamat Lengkap</label>
+                    <textarea name="address" id="editAddress" class="input w-full" rows="3" autocomplete="street-address" placeholder="Jl. Contoh No. 123, Kota..."></textarea>
                 </div>
             </div>
-            <div class="flex gap-2 mt-6">
+            <div class="flex gap-3 mt-6 pt-4 border-t" style="border-color: var(--border-color);">
                 <button type="button" onclick="closeModal('editModal')" class="btn btn-outline flex-1">Batal</button>
-                <button type="submit" class="btn btn-primary flex-1">Simpan</button>
+                <button type="submit" class="btn btn-primary flex-1">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Update
+                </button>
             </div>
         </form>
-    </div>
+    </x-modal>
 
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+
         function openCreateModal() {
             document.getElementById('createForm').reset();
             document.getElementById('createIsActive').checked = true;
@@ -201,47 +210,43 @@
         async function deleteLocation(id, name) {
             const result = await Swal.fire({
                 title: 'Hapus Lokasi?',
-                html: `Yakin ingin menghapus lokasi <strong>${name}</strong>?<br>Tindakan ini tidak dapat dibatalkan.`,
+                html: `Yakin ingin menghapus <strong>${name}</strong>?<br><small class="text-gray-500">Tindakan ini tidak dapat dibatalkan.</small>`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Hapus!',
                 cancelButtonText: 'Batal',
-                confirmButtonText: 'Ya, hapus!',
+                reverseButtons: true
             });
             
-            if (result.isConfirmed) {
-                try {
-                    const response = await fetch(`/master/locations/${id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json',
-                        }
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (response.ok && data.success !== false) {
-                        await Swal.fire({
-                            icon: 'success',
-                            title: 'Terhapus!',
-                            text: 'Lokasi berhasil dihapus',
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-                        location.reload();
-                    } else {
-                        throw new Error(data.message || 'Gagal menghapus lokasi');
+            if (!result.isConfirmed) return;
+            
+            try {
+                const response = await fetch(`/master/locations/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
                     }
-                } catch (error) {
-                    console.error('Delete error:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal!',
-                        text: error.message || 'Terjadi kesalahan saat menghapus lokasi',
-                    });
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success !== false) {
+                    Toast.fire({ icon: 'success', title: 'Lokasi berhasil dihapus!' });
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    throw new Error(data.message || 'Gagal menghapus lokasi');
                 }
+            } catch (error) {
+                console.error('Delete error:', error);
+                Swal.fire({ icon: 'error', title: 'Gagal!', text: error.message || 'Terjadi kesalahan' });
             }
         }
+
+        @if(session()->has('success') && session('success'))
+        Toast.fire({ icon: 'success', title: '{{ session("success") }}' });
+        @endif
     </script>
 </x-app-layout>

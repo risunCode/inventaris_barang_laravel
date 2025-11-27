@@ -16,11 +16,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ? $title . ' - ' : '' }}{{ config('app.name') }}</title>
+    <!-- DNS Prefetch & Preconnect for faster loading -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font with display=swap for faster text rendering -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
+    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
+        /* Hide Alpine.js elements until initialized - prevents dropdown flash */
+        [x-cloak] { display: none !important; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { scrollbar-width: none; }
     </style>
@@ -373,7 +381,7 @@
 
     <!-- Modal CSS & JS -->
     <style>
-        /* Modal Styles */
+        /* Modal Styles - hidden by default via inline style, shown via JS */
         .modal-backdrop {
             position: fixed;
             inset: 0;
@@ -381,12 +389,10 @@
             backdrop-filter: blur(4px);
             z-index: 9998;
             opacity: 0;
-            visibility: hidden;
-            transition: all 0.2s ease;
+            transition: opacity 0.2s ease;
         }
         .modal-backdrop.active {
             opacity: 1;
-            visibility: visible;
         }
         
         .modal-content {
@@ -398,12 +404,10 @@
             max-height: 90vh;
             overflow-y: auto;
             opacity: 0;
-            visibility: hidden;
             transition: all 0.2s ease;
         }
         .modal-content.active {
             opacity: 1;
-            visibility: visible;
             transform: translate(-50%, -50%) scale(1);
         }
     </style>
@@ -414,6 +418,10 @@
             const modal = document.getElementById(modalId);
             const backdrop = document.getElementById(modalId + '-backdrop');
             if (modal && backdrop) {
+                backdrop.style.display = 'block';
+                modal.style.display = 'block';
+                // Trigger reflow for animation
+                void modal.offsetWidth;
                 backdrop.classList.add('active');
                 modal.classList.add('active');
                 document.body.style.overflow = 'hidden';
@@ -427,16 +435,19 @@
                 backdrop.classList.remove('active');
                 modal.classList.remove('active');
                 document.body.style.overflow = '';
+                // Hide after animation
+                setTimeout(() => {
+                    backdrop.style.display = 'none';
+                    modal.style.display = 'none';
+                }, 200);
             }
         }
 
         // Close modal on backdrop click
         document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal-backdrop')) {
-                e.target.classList.remove('active');
+            if (e.target.classList.contains('modal-backdrop') && e.target.classList.contains('active')) {
                 const modalId = e.target.id.replace('-backdrop', '');
-                document.getElementById(modalId)?.classList.remove('active');
-                document.body.style.overflow = '';
+                closeModal(modalId);
             }
         });
 
@@ -444,10 +455,8 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 document.querySelectorAll('.modal-backdrop.active').forEach(el => {
-                    el.classList.remove('active');
                     const modalId = el.id.replace('-backdrop', '');
-                    document.getElementById(modalId)?.classList.remove('active');
-                    document.body.style.overflow = '';
+                    closeModal(modalId);
                 });
             }
         });
@@ -729,7 +738,7 @@
             }
         });
 
-        // Form Validation dengan SweetAlert2
+        // Form Validation dengan AJAX
         function handleFormSubmit(form, event) {
             event.preventDefault();
             
@@ -753,18 +762,11 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    Swal.fire({
-                        title: 'Berhasil!',
-                        text: data.message || 'Data berhasil disimpan',
-                        icon: 'success',
-                        confirmButtonColor: 'var(--accent-color)',
-                    }).then(() => {
-                        if (data.redirect) {
-                            window.location.href = data.redirect;
-                        } else {
-                            location.reload();
-                        }
-                    });
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        location.reload();
+                    }
                 } else {
                     throw new Error(data.message || 'Terjadi kesalahan');
                 }
@@ -810,13 +812,7 @@
         }
         
         function showValidationError(message) {
-            Swal.fire({
-                title: 'Oops!',
-                text: message,
-                icon: 'error',
-                confirmButtonColor: 'var(--accent-color)',
-                confirmButtonText: 'OK, Saya Mengerti'
-            });
+            alert('Error: ' + message);
         }
 
         // Auto-show validation errors dari session

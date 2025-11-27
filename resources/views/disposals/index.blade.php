@@ -88,7 +88,7 @@
     </div>
 
     <!-- Create Disposal Modal -->
-    <x-modal name="create-disposal" title="Ajukan Penghapusan Barang" maxWidth="4xl">
+    <x-modal name="modal-create-disposal" title="Ajukan Penghapusan Barang" maxWidth="4xl">
         <form action="{{ route('disposals.store') }}" method="POST" class="space-y-6">
             @csrf
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

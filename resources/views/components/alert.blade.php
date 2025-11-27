@@ -16,7 +16,7 @@ $icon = match($type) {
 };
 @endphp
 
-<div x-data="{ show: true }" x-show="show" {{ $attributes->merge(['class' => "alert $classes"]) }}>
+<div x-data="{ show: true }" x-show="show" x-cloak {{ $attributes->merge(['class' => "alert $classes"]) }}>
     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         {!! $icon !!}
     </svg>

@@ -126,15 +126,7 @@
 
     <script>
         function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Tersalin!',
-                    text: 'Link referral berhasil disalin',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-            });
+            navigator.clipboard.writeText(text);
         }
     </script>
 </x-app-layout>

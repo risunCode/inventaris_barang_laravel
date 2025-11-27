@@ -143,117 +143,120 @@
     </div>
 
     <!-- Create Modal -->
-    <div id="createModal-backdrop" class="modal-backdrop"></div>
-    <div id="createModal" class="modal-content w-full max-w-md rounded-xl p-6" style="background-color: var(--bg-card);">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold" style="color: var(--text-primary);">Tambah Pengguna</h3>
-            <button onclick="closeModal('createModal')" class="p-1 rounded hover:bg-gray-100">
-                <svg class="w-5 h-5" style="color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-        </div>
+    <x-modal name="createModal" title="Tambah Pengguna Baru" maxWidth="2xl">
         <form id="createForm" action="{{ route('users.store') }}" method="POST">
             @csrf
-            <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Nama</label>
-                    <input type="text" name="name" id="createName" class="input" autocomplete="name" required>
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Nama Lengkap <span class="text-red-500">*</span></label>
+                    <input type="text" name="name" id="createName" class="input w-full" placeholder="Masukkan nama lengkap" autocomplete="name" required>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Email</label>
-                    <input type="email" name="email" id="createEmail" class="input" autocomplete="email" required>
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Email <span class="text-red-500">*</span></label>
+                    <input type="email" name="email" id="createEmail" class="input w-full" placeholder="contoh@email.com" autocomplete="email" required>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">No. Telepon</label>
-                    <input type="text" name="phone" id="createPhone" class="input" autocomplete="tel">
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">No. Telepon</label>
+                    <input type="text" name="phone" id="createPhone" class="input w-full" placeholder="08xxxxxxxxxx" autocomplete="tel">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Password</label>
-                    <input type="password" name="password" id="createPassword" class="input" autocomplete="new-password" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Konfirmasi Password</label>
-                    <input type="password" name="password_confirmation" id="createPasswordConfirmation" class="input" autocomplete="new-password" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Role</label>
-                    <select name="role" id="createRole" class="input" required>
-                        <option value="">Pilih Role</option>
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Role <span class="text-red-500">*</span></label>
+                    <select name="role" id="createRole" class="input w-full" required>
+                        <option value="">-- Pilih Role --</option>
                         @foreach($roles as $role)
                         <option value="{{ $role->name }}">{{ ucfirst($role->name) }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Kode Referral <span class="text-xs text-gray-600">(opsional)</span></label>
-                    <input type="text" name="referral_code" id="createReferralCode" class="input" placeholder="Masukkan kode referral">
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Password <span class="text-red-500">*</span></label>
+                    <input type="password" name="password" id="createPassword" class="input w-full" placeholder="Min. 8 karakter" autocomplete="new-password" required>
                 </div>
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" name="is_active" id="createIsActive" value="1" class="rounded" checked>
-                    <label for="createIsActive" class="text-sm" style="color: var(--text-primary);">Aktif</label>
+                <div>
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Konfirmasi Password <span class="text-red-500">*</span></label>
+                    <input type="password" name="password_confirmation" id="createPasswordConfirmation" class="input w-full" placeholder="Ulangi password" autocomplete="new-password" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Kode Referral <span class="text-xs" style="color: var(--text-secondary);">(opsional)</span></label>
+                    <input type="text" name="referral_code" id="createReferralCode" class="input w-full" placeholder="Masukkan kode referral">
+                </div>
+                <div class="flex items-center pt-6">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_active" id="createIsActive" value="1" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                        <span class="ms-3 text-sm font-medium" style="color: var(--text-primary);">Status Aktif</span>
+                    </label>
                 </div>
             </div>
-            <div class="flex gap-2 mt-6">
+            <div class="flex gap-3 mt-6 pt-4 border-t" style="border-color: var(--border-color);">
                 <button type="button" onclick="closeModal('createModal')" class="btn btn-outline flex-1">Batal</button>
-                <button type="submit" class="btn btn-primary flex-1">Simpan</button>
+                <button type="submit" class="btn btn-primary flex-1">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Simpan
+                </button>
             </div>
         </form>
-    </div>
+    </x-modal>
 
     <!-- Edit Modal -->
-    <div id="editModal-backdrop" class="modal-backdrop"></div>
-    <div id="editModal" class="modal-content w-full max-w-md rounded-xl p-6" style="background-color: var(--bg-card);">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold" style="color: var(--text-primary);">Edit Pengguna</h3>
-            <button onclick="closeModal('editModal')" class="p-1 rounded hover:bg-gray-100">
-                <svg class="w-5 h-5" style="color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-        </div>
+    <x-modal name="editModal" title="Edit Pengguna" maxWidth="2xl">
         <form id="editForm" method="POST">
             @csrf
             @method('PUT')
-            <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Nama</label>
-                    <input type="text" name="name" id="editName" class="input" autocomplete="name" required>
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Nama Lengkap <span class="text-red-500">*</span></label>
+                    <input type="text" name="name" id="editName" class="input w-full" placeholder="Masukkan nama lengkap" autocomplete="name" required>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Email</label>
-                    <input type="email" name="email" id="editEmail" class="input" autocomplete="email" required>
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Email <span class="text-red-500">*</span></label>
+                    <input type="email" name="email" id="editEmail" class="input w-full" placeholder="contoh@email.com" autocomplete="email" required>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">No. Telepon</label>
-                    <input type="text" name="phone" id="editPhone" class="input" autocomplete="tel">
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">No. Telepon</label>
+                    <input type="text" name="phone" id="editPhone" class="input w-full" placeholder="08xxxxxxxxxx" autocomplete="tel">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Role</label>
-                    <select name="role" id="editRole" class="input">
+                    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Role <span class="text-red-500">*</span></label>
+                    <select name="role" id="editRole" class="input w-full" required>
                         @foreach($roles as $role)
                         <option value="{{ $role->name }}">{{ ucfirst($role->name) }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" name="is_active" id="editIsActive" value="1" class="rounded">
-                    <label for="editIsActive" class="text-sm" style="color: var(--text-primary);">Aktif</label>
+                <div class="md:col-span-2 flex items-center">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_active" id="editIsActive" value="1" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                        <span class="ms-3 text-sm font-medium" style="color: var(--text-primary);">Status Aktif</span>
+                    </label>
                 </div>
             </div>
-            <div class="flex gap-2 mt-6">
+            <div class="flex gap-3 mt-6 pt-4 border-t" style="border-color: var(--border-color);">
                 <button type="button" onclick="closeModal('editModal')" class="btn btn-outline flex-1">Batal</button>
-                <button type="submit" class="btn btn-primary flex-1">Simpan</button>
+                <button type="submit" class="btn btn-primary flex-1">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Update
+                </button>
             </div>
         </form>
-    </div>
+    </x-modal>
 
+    <!-- SweetAlert2 CDN - only for this page -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // Toast config
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+        });
+
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Tersalin!',
-                    text: 'Link referral berhasil disalin',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
+                Toast.fire({ icon: 'success', title: 'Link berhasil disalin!' });
             });
         }
 
@@ -276,12 +279,14 @@
         async function deleteUser(id, name) {
             const result = await Swal.fire({
                 title: 'Hapus Pengguna?',
-                html: `Yakin ingin menghapus pengguna <strong>${name}</strong>?<br>Tindakan ini tidak dapat dibatalkan.`,
+                html: `Yakin ingin menghapus <strong>${name}</strong>?<br><small class="text-gray-500">Tindakan ini tidak dapat dibatalkan.</small>`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Hapus!',
                 cancelButtonText: 'Batal',
-                confirmButtonText: 'Ya, hapus!',
+                reverseButtons: true
             });
             
             if (result.isConfirmed) {
@@ -297,5 +302,12 @@
             }
         }
 
+        // Show session messages
+        @if(session()->has('success') && session('success'))
+        Toast.fire({ icon: 'success', title: '{{ session("success") }}' });
+        @endif
+        @if(session()->has('error') && session('error'))
+        Toast.fire({ icon: 'error', title: '{{ session("error") }}' });
+        @endif
     </script>
 </x-app-layout>

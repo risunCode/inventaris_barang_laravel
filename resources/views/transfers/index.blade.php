@@ -90,7 +90,7 @@
     </div>
 
     <!-- Create Transfer Modal -->
-    <x-modal name="create-transfer" title="Ajukan Transfer Barang" maxWidth="4xl">
+    <x-modal name="modal-create-transfer" title="Ajukan Transfer Barang" maxWidth="4xl">
         <form action="{{ route('transfers.store') }}" method="POST" class="space-y-6">
             @csrf
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -98,7 +98,7 @@
     </div>
 
     <!-- Create Maintenance Modal -->
-    <x-modal name="create-maintenance" title="Catat Maintenance Barang" maxWidth="5xl">
+    <x-modal name="modal-create-maintenance" title="Catat Maintenance Barang" maxWidth="5xl">
         <form action="{{ route('maintenance.store') }}" method="POST" class="space-y-6">
             @csrf
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
