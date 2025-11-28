@@ -1,6 +1,6 @@
 # 🏢 Sistem Inventaris Barang - Kabupaten Kubu Raya
 
-**Version: 0.0.7-beta** 🎉
+**Version: 0.0.7-beta-007** 🎉
 
 Sistem manajemen inventaris barang yang komprehensif untuk pemerintah daerah, dibangun dengan Laravel 12 dan teknologi modern.
 
@@ -9,6 +9,7 @@ Sistem manajemen inventaris barang yang komprehensif untuk pemerintah daerah, di
 ## 📋 Daftar Isi
 
 - [🚀 Features Utama](#-features-utama)
+- [📸 Screenshots](#-screenshots)
 - [🛠️ Technical Stack](#️-technical-stack)
 - [🚀 Installation & Deployment Guide](#-installation--deployment-guide)
   - [Prerequisites](#prerequisites)
@@ -73,6 +74,27 @@ Sistem manajemen inventaris barang yang komprehensif untuk pemerintah daerah, di
 - **Gallery lightbox** untuk preview gambar
 - Responsive design untuk semua device sizes
 - Enhanced error handling (development vs production)
+
+---
+
+## 📸 Screenshots
+
+### 🏠 Dashboard Analytics
+Dashboard real-time dengan visualisasi data komprehensif dan monitoring status barang.
+
+<img width="1920" height="1080" alt="Dashboard SIBARANG" src="https://github.com/user-attachments/assets/aa9c0f47-6dc0-4851-95fa-5d45c9869b03" />
+
+### 📦 Detail Barang
+Interface detail barang yang informatif dengan gallery preview dan informasi lengkap.
+
+<img width="1920" height="1080" alt="Detail Barang SIBARANG" src="https://github.com/user-attachments/assets/8bd6e9c0-1fe2-4bff-9e04-620d8c5b4319" />
+
+### ℹ️ About System
+Halaman about dengan informasi sistem lengkap dan teknologi yang digunakan.
+
+<img width="1920" height="1080" alt="About SIBARANG" src="https://github.com/user-attachments/assets/a6edcd66-32ee-4e1c-882f-9f03668aa37f" />
+
+---
 
 ## 🛠️ Technical Stack
 
@@ -308,10 +330,11 @@ php artisan view:clear
 
 ## 📝 Latest Updates
 
-### v0.0.7-beta (Current) - 28 Nov 2025
+### v0.0.7-beta-007 (Current) - 28 Nov 2025
 
 **🎯 Major Highlights:**
 - ✅ **Enhanced Development Badge** - Professional indicator dengan network info
+- ✅ **Added Screenshots Section** - Visual showcase of dashboard, detail barang, dan about pages
 - ✅ **Fixed Export PDF 404 errors** - Route precedence resolved
 - ✅ **Advanced Profile Photo Cropping** - Fixed circular crop area dengan keyboard shortcuts
 - ✅ **Fixed User Profile 404 errors** - Permission middleware resolved

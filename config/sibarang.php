@@ -14,7 +14,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'name' => env('APP_DISPLAY_NAME', 'SIBARANG'),
-    'version' => '0.0.7-beta',
+    'version' => '0.0.7-beta-007',
     'description' => 'Sistem Inventaris Barang',
     'license' => 'GPL-3.0',
 
