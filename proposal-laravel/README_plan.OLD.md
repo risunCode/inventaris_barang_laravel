@@ -1,9 +1,19 @@
-# 📦 Aplikasi Inventaris Barang
-## Sistem Manajemen Aset & Inventaris Perkantoran
+# ⚠️ ARCHIVED - Historical Reference
+
+**This document is archived. Please see the current technical specification:**
+
+👉 **[TECHNICAL_SPEC.md](./TECHNICAL_SPEC.md)** ← Current Implementation Details
+
+---
+
+# 📦 Aplikasi Inventaris Barang (ARCHIVED)
+## Sistem Manajemen Aset & Inventaris Perkantoran - Original Proposal
 
 ![Laravel](https://img.shields.io/badge/Laravel-12-red?style=flat-square&logo=laravel)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.x-blue?style=flat-square&logo=tailwindcss)
 ![PHP](https://img.shields.io/badge/PHP-8.2+-purple?style=flat-square&logo=php)
+
+> **Note:** This is the original planning document. For the actual implemented system with exact versions and current features, please refer to [TECHNICAL_SPEC.md](./TECHNICAL_SPEC.md).
 
 ---
 
