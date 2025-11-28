@@ -1,16 +1,38 @@
-# 🏢 Sistem Inventaris Barang - Kabupaten Kubu Raya
+# 🏢 SIBARANG - Sistem Inventaris Barang
 
 **Version: 0.0.7-beta-007** 🎉
 
-Sistem manajemen inventaris barang yang komprehensif untuk pemerintah daerah, dibangun dengan Laravel 12 dan teknologi modern.
+Sistem manajemen inventaris barang yang komprehensif untuk instansi pemerintah, BUMN/BUMD, dan perusahaan swasta. Dibangun dengan Laravel 12 dan teknologi modern.
+
+---
+
+## 🚀 Quick Start for Organizations
+
+**Clone & Setup in 5 Minutes:**
+```bash
+git clone https://github.com/risunCode/inventaris_barang_laravel.git your-inventory
+cd your-inventory && composer install && npm install
+cp .env.example .env && php artisan key:generate
+php artisan migrate && php artisan db:seed
+npm run build && php artisan serve
+```
+
+🎉 **Access:** http://127.0.0.1:8000  
+🔑 **Login:** admin@inventory.com / password
+
+📋 **Need customization?** See our [Deployment Guide](DEPLOYMENT.md) and [Customization Guide](CUSTOMIZATION.md)
 
 ---
 
 ## 📋 Daftar Isi
 
+- [🚀 Quick Start for Organizations](#-quick-start-for-organizations)
 - [🚀 Features Utama](#-features-utama)
 - [📸 Screenshots](#-screenshots)
 - [🛠️ Technical Stack](#️-technical-stack)
+- [📚 Documentation Guides](#-documentation-guides)
+  - [🚀 Deployment Guide](-deployment-guide)
+  - [🎨 Customization Guide](-customization-guide)
 - [🚀 Installation & Deployment Guide](#-installation--deployment-guide)
   - [Prerequisites](#prerequisites)
   - [Quick Start (Development)](#quick-start-development)
@@ -105,6 +127,28 @@ Halaman about dengan informasi sistem lengkap dan teknologi yang digunakan.
 - **Permissions**: Spatie Laravel Permission
 - **PDF**: DomPDF
 - **Notifications**: Laravel native notifications
+
+---
+
+## 📚 Documentation Guides
+
+### 🚀 [Deployment Guide](DEPLOYMENT.md)
+Complete deployment documentation for production environments:
+- Quick clone & setup instructions
+- Production server configuration (Apache/Nginx)
+- Environment templates & optimization
+- Security hardening & performance tuning
+- Troubleshooting common issues
+
+### 🎨 [Customization Guide](CUSTOMIZATION.md)
+Brand and customize SIBARANG for your organization:
+- Logo, colors, and organization details
+- Industry-specific configurations (Healthcare, Education, Corporate)
+- Custom fields and validation rules
+- Multi-language support setup
+- Advanced feature customization
+
+---
 
 ## 🚀 Installation & Deployment Guide
 
