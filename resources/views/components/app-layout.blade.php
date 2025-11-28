@@ -148,7 +148,7 @@
                 @endcan
 
                 <!-- Section: Admin -->
-                @can('users.view')
+                @if(auth()->user()->role === 'admin')
                 <div class="pt-4">
                     <p class="px-3 text-xs font-semibold uppercase tracking-wider mb-2" style="color: var(--sidebar-text-muted);">Administrator</p>
                 </div>
@@ -159,15 +159,21 @@
                     </svg>
                     <span class="font-medium">Pengguna</span>
                 </a>
+                @endif
 
-                @can('users.manage')
+                <!-- Section: Referral -->
+                @can('referral-codes.own')
+                @if(auth()->user()->role !== 'admin')
+                <div class="pt-4">
+                    <p class="px-3 text-xs font-semibold uppercase tracking-wider mb-2" style="color: var(--sidebar-text-muted);">Referral</p>
+                </div>
+                @endif
                 <a href="{{ route('referral-codes.index') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('referral-codes.*') ? 'active' : '' }}" style="{{ request()->routeIs('referral-codes.*') ? $activeStyle : $inactiveStyle }}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
                     </svg>
                     <span class="font-medium">Kode Referral</span>
                 </a>
-                @endcan
                 @endcan
 
                 <!-- Section: Lainnya -->
@@ -201,9 +207,9 @@
                     
                     <!-- Logos -->
                     <div class="flex items-center gap-3">
-                        <img src="{{ asset('images/logo-kab.png') }}" alt="Logo Kabupaten" width="40" height="40" class="h-10 w-auto object-contain" onerror="this.style.display='none'">
-                        <img src="{{ asset('images/logo-pbj-kalbar.png') }}" alt="Logo PBJ Kalbar" width="40" height="40" class="h-10 w-auto object-contain" onerror="this.style.display='none'">
-                        <div class="border-l pl-3 hidden sm:block" style="border-color: var(--border-color);">
+                        <img src="{{ asset('images/logo-kab.png') }}" alt="Logo Kabupaten" width="40" height="40" class="h-10 w-auto object-contain cursor-help" onerror="this.style.display='none'" title="Logo Kabupaten Kubu Raya">
+                        <img src="{{ asset('images/logo-pbj-kalbar.png') }}" alt="Logo PBJ Kalbar" width="40" height="40" class="h-10 w-auto object-contain cursor-help" onerror="this.style.display='none'" title="Logo PBJ (Pengadaan Barang Jasa) Kalimantan Barat">
+                        <div class="border-l pl-3 hidden sm:block cursor-help" style="border-color: var(--border-color);" title="SIBARANG v{{ config('app.version', '0.0.7-beta') }} - Sistem Inventaris Barang Kabupaten Kubu Raya. Dikembangkan untuk manajemen aset dan inventaris pemerintah daerah.">
                             <h1 class="text-sm font-semibold" style="color: var(--text-primary);">Sistem Inventaris Barang</h1>
                             <p class="text-xs" style="color: var(--text-secondary);">Kabupaten Kubu Raya</p>
                         </div>
@@ -212,11 +218,51 @@
 
                 <!-- Right: Dev Badge + Notifications + Profile -->
                 <div class="flex items-center gap-3">
-                    <!-- Development Badge -->
+                    <!-- Development Badge (Enhanced from E-Surat-Perkim) -->
                     @if(config('app.debug'))
-                    <div class="hidden md:flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-medium relative" style="background-color: #fef3c7; color: #92400e;">
-                        <span class="w-2 h-2 rounded-full animate-pulse" style="background-color: #f59e0b;"></span>
-                        <span>DEVELOPMENT</span>
+                    <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg mr-2 border-2 border-dashed border-orange-400 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 cursor-help" 
+                         title="Mode Development Aktif&#10;&#10;Untuk menonaktifkan:&#10;1. Edit file .env&#10;2. Ubah APP_DEBUG=false&#10;3. Restart server&#10;&#10;⚠️ Jangan lupa nonaktifkan di production!">
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-1">
+                                <div class="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                                <span class="text-xs font-bold text-orange-700 dark:text-orange-400">DEVELOPMENT</span>
+                            </div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">|</div>
+                            <div class="flex items-center gap-1">
+                                <svg class="w-3 h-3 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                <span class="text-xs font-mono text-blue-700 dark:text-blue-300">{{ request()->ip() }}</span>
+                            </div>
+                            @php
+                                // Get machine IP (prioritize IPv4)
+                                $machineIp = '127.0.0.1';
+                                if (!empty($_SERVER['SERVER_ADDR']) && filter_var($_SERVER['SERVER_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                                    $machineIp = $_SERVER['SERVER_ADDR'];
+                                } else {
+                                    try {
+                                        $output = shell_exec('ipconfig');
+                                        if ($output && preg_match('/IPv4 Address[.\s]*:\s*([0-9.]+)/', $output, $matches)) {
+                                            if (filter_var($matches[1], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                                                $machineIp = $matches[1];
+                                            }
+                                        }
+                                    } catch (Exception $e) {
+                                        // Keep default
+                                    }
+                                }
+                                $port = request()->getPort();
+                            @endphp
+                            <div class="text-xs text-gray-500 dark:text-gray-400">|</div>
+                            <div class="flex items-center gap-1">
+                                <svg class="w-3 h-3 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
+                                <span class="text-xs font-mono text-green-700 dark:text-green-300">{{ $machineIp }}:{{ $port }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    @else
+                    <!-- Production IP Display (Desktop Only) -->
+                    <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg mr-2" style="background-color: var(--bg-input); border: 1px solid var(--border-color);">
+                        <svg class="w-4 h-4" style="color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                        <span class="text-xs font-mono" style="color: var(--text-primary);" title="IP Address Anda">{{ request()->ip() }}</span>
                     </div>
                     @endif
 
@@ -243,11 +289,11 @@
                     </div>
                     
                     <!-- Divider -->
-                    <div class="w-px h-6" style="background-color: var(--border-color);"></div>
+                    <div class="w-px h-6" style="background-color: var(--border-color);" title="Pemisah bagian header"></div>
 
                     <!-- Notifications -->
                     <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" class="p-2 rounded-lg hover:opacity-80 relative" style="color: var(--text-secondary);" aria-label="Notifikasi" title="Notifikasi">
+                        <button @click="open = !open" class="p-2 rounded-lg hover:opacity-80 relative" style="color: var(--text-secondary);" aria-label="Notifikasi" title="Notifikasi{{ auth()->check() && auth()->user()->unreadNotifications->count() > 0 ? ' (' . auth()->user()->unreadNotifications->count() . ' belum dibaca)' : ' - Tidak ada notifikasi baru' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                             </svg>
@@ -289,6 +335,53 @@
                             <div class="px-4 py-3 border-b" style="border-color: var(--border-color);">
                                 <p class="text-sm font-medium" style="color: var(--text-primary);">{{ auth()->user()->name }}</p>
                                 <p class="text-xs truncate" style="color: var(--text-secondary);">{{ auth()->user()->email }}</p>
+                                <div class="mt-2">
+                                    <span class="inline-block px-2 py-0.5 text-xs rounded" style="background-color: var(--bg-input); color: var(--text-secondary);">{{ ucfirst(auth()->user()->role ?? 'User') }}</span>
+                                    
+                                    @if(config('app.debug'))
+                                    <!-- Development Info for Mobile -->
+                                    <div class="lg:hidden mt-2 p-2 rounded border-2 border-dashed border-orange-400 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20" title="Mode Development Aktif">
+                                        <div class="flex items-center gap-1 mb-1">
+                                            <div class="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></div>
+                                            <span class="text-xs font-bold text-orange-700 dark:text-orange-400">DEV MODE</span>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <div class="flex items-center gap-1 text-xs">
+                                                <svg class="w-3 h-3 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                                <span class="font-mono text-blue-700 dark:text-blue-300">{{ request()->ip() }}</span>
+                                            </div>
+                                            @php
+                                                $machineIp = '127.0.0.1';
+                                                if (!empty($_SERVER['SERVER_ADDR']) && filter_var($_SERVER['SERVER_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                                                    $machineIp = $_SERVER['SERVER_ADDR'];
+                                                } else {
+                                                    try {
+                                                        $output = shell_exec('ipconfig');
+                                                        if ($output && preg_match('/IPv4 Address[.\s]*:\s*([0-9.]+)/', $output, $matches)) {
+                                                            if (filter_var($matches[1], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                                                                $machineIp = $matches[1];
+                                                            }
+                                                        }
+                                                    } catch (Exception $e) {
+                                                        // Keep default
+                                                    }
+                                                }
+                                                $port = request()->getPort();
+                                            @endphp
+                                            <div class="flex items-center gap-1 text-xs">
+                                                <svg class="w-3 h-3 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
+                                                <span class="font-mono text-green-700 dark:text-green-300">{{ $machineIp }}:{{ $port }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @else
+                                    <!-- IP for Mobile - Production Only -->
+                                    <div class="lg:hidden flex items-center gap-1 px-2 py-0.5 rounded text-xs mt-2 w-fit" style="background-color: var(--bg-input); color: var(--text-secondary);" title="IP Address Anda">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                                        <span class="font-mono">{{ request()->ip() }}</span>
+                                    </div>
+                                    @endif
+                                </div>
                             </div>
                             <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 px-4 py-2 text-sm hover:opacity-80" style="color: var(--text-primary);">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
@@ -891,6 +984,26 @@
                 return e.returnValue;
             }
         });
+
+        // Toggle Password Visibility
+        function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            const button = input.parentElement.querySelector('button');
+            const showIcon = button.querySelector('.password-icon-show');
+            const hideIcon = button.querySelector('.password-icon-hide');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                showIcon.classList.add('hidden');
+                hideIcon.classList.remove('hidden');
+            } else {
+                input.type = 'password';
+                showIcon.classList.remove('hidden');
+                hideIcon.classList.add('hidden');
+            }
+        }
     </script>
 
     @stack('scripts')

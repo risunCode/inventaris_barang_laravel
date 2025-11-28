@@ -6,11 +6,14 @@ use App\Models\ActivityLog;
 use App\Models\Commodity;
 use App\Models\Location;
 use App\Models\Transfer;
+use App\Models\User;
+use App\Notifications\TransferRequested;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
 class TransferController extends Controller implements HasMiddleware
@@ -122,6 +125,10 @@ class TransferController extends Controller implements HasMiddleware
         ]);
 
         ActivityLog::log('created', "Mengajukan transfer: {$transfer->transfer_number}", $transfer);
+
+        // Send notification to admin users about transfer request
+        $adminUsers = User::where('role', 'admin')->get();
+        Notification::send($adminUsers, new TransferRequested($transfer, Auth::user()));
 
         return redirect()->route('transfers.show', $transfer)
             ->with('success', 'Pengajuan transfer berhasil dibuat.');

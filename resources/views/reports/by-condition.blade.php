@@ -67,25 +67,23 @@
                     <table class="w-full">
                         <thead>
                             <tr class="border-b" style="border-color: var(--border-color);">
+                                <th class="text-center py-3 px-4 font-medium w-16" style="color: var(--text-primary);">No</th>
                                 <th class="text-left py-3 px-4 font-medium" style="color: var(--text-primary);">Kategori</th>
-                                <th class="text-left py-3 px-4 font-medium" style="color: var(--text-primary);">Total Barang</th>
-                                <th class="text-left py-3 px-4 font-medium text-green-600">Baik</th>
-                                <th class="text-left py-3 px-4 font-medium text-yellow-600">Rusak Ringan</th>
-                                <th class="text-left py-3 px-4 font-medium text-red-600">Rusak Berat</th>
-                                <th class="text-left py-3 px-4 font-medium" style="color: var(--text-primary);">Persentase Baik</th>
+                                <th class="text-center py-3 px-4 font-medium" style="color: var(--text-primary);">Total Barang</th>
+                                <th class="text-center py-3 px-4 font-medium text-green-600">Baik</th>
+                                <th class="text-center py-3 px-4 font-medium text-yellow-600">Rusak Ringan</th>
+                                <th class="text-center py-3 px-4 font-medium text-red-600">Rusak Berat</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($categoryConditions ?? [] as $category)
+                            @forelse($categoryConditions ?? [] as $index => $category)
                             <tr class="border-b hover:opacity-80 transition-opacity" style="border-color: var(--border-color);">
+                                <td class="py-3 px-4 text-center font-medium" style="color: var(--text-secondary);">{{ $index + 1 }}</td>
                                 <td class="py-3 px-4 font-medium" style="color: var(--text-primary);">{{ $category->name }}</td>
-                                <td class="py-3 px-4" style="color: var(--text-secondary);">{{ $category->total_items }}</td>
-                                <td class="py-3 px-4 text-green-600 font-medium">{{ $category->baik }}</td>
-                                <td class="py-3 px-4 text-yellow-600 font-medium">{{ $category->rusak_ringan }}</td>
-                                <td class="py-3 px-4 text-red-600 font-medium">{{ $category->rusak_berat }}</td>
-                                <td class="py-3 px-4 font-medium" style="color: var(--text-primary);">
-                                    {{ $category->total_items > 0 ? number_format($category->baik / $category->total_items * 100, 1) : 0 }}%
-                                </td>
+                                <td class="py-3 px-4 text-center" style="color: var(--text-secondary);">{{ $category->total_items }}</td>
+                                <td class="py-3 px-4 text-center text-green-600 font-medium">{{ $category->baik }}</td>
+                                <td class="py-3 px-4 text-center text-yellow-600 font-medium">{{ $category->rusak_ringan }}</td>
+                                <td class="py-3 px-4 text-center text-red-600 font-medium">{{ $category->rusak_berat }}</td>
                             </tr>
                             @empty
                             <tr>

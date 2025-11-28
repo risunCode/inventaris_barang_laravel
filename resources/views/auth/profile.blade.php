@@ -18,12 +18,12 @@
                     
                     <!-- Photo Upload with Crop -->
                     <div class="space-y-3">
-                        <input type="file" id="photo-input" accept="image/*" class="hidden" onchange="openCropModal(this)">
-                        <button type="button" onclick="document.getElementById('photo-input').click()" class="w-full px-4 py-2 rounded-lg text-sm font-medium btn-primary">
+                        <input type="file" id="photo-input" accept="image/*" class="hidden" onchange="openCropModal(this);">
+                        <button type="button" onclick="document.getElementById('photo-input').click();" class="w-full px-4 py-2 rounded-lg text-sm font-medium btn-primary">
                             <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                             Ganti Foto Profil
                         </button>
-                        <p class="text-xs text-center" style="color: var(--text-secondary);">Klik untuk pilih & crop foto</p>
+                        <p class="text-xs text-center" style="color: var(--text-secondary);">Klik untuk pilih & crop foto (drag untuk posisi, scroll untuk zoom)</p>
                     </div>
                 </div>
 
@@ -121,7 +121,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="font-medium" style="color: var(--text-primary);">
-                                    @if($user->security_question_1)
+                                    @if($user->security_question_1 !== null)
                                         <span class="inline-flex items-center gap-1 text-green-600">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                             Pertanyaan keamanan sudah diatur
@@ -153,8 +153,8 @@
     </div>
 
     <!-- Crop Modal -->
-    <div id="crop-modal-backdrop" class="modal-backdrop" style="display:none;"></div>
-    <div id="crop-modal" class="modal-content w-full max-w-lg" style="display:none;">
+    <div id="crop-modal-backdrop" class="modal-backdrop"></div>
+    <div id="crop-modal" class="modal-content w-full max-w-lg">
         <div class="rounded-2xl shadow-2xl border overflow-hidden" style="background-color: var(--bg-card); border-color: var(--border-color);">
             <div class="p-4 border-b flex items-center justify-between" style="border-color: var(--border-color);">
                 <h3 class="text-lg font-semibold" style="color: var(--text-primary);">Crop Foto Profil</h3>
@@ -168,23 +168,40 @@
                 </div>
                 <div class="flex items-center justify-between gap-3">
                     <div class="flex items-center gap-2">
-                        <button onclick="cropper.zoom(-0.1)" class="p-2 rounded-lg" style="background-color: var(--bg-input); color: var(--text-secondary);" title="Zoom Out">
+                        <button onclick="cropZoom(-0.1)" class="p-2 rounded-lg hover:opacity-80 transition-opacity" style="background-color: var(--bg-input); color: var(--text-secondary);" title="Zoom Out (-)">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/></svg>
                         </button>
-                        <button onclick="cropper.zoom(0.1)" class="p-2 rounded-lg" style="background-color: var(--bg-input); color: var(--text-secondary);" title="Zoom In">
+                        <button onclick="cropZoom(0.1)" class="p-2 rounded-lg hover:opacity-80 transition-opacity" style="background-color: var(--bg-input); color: var(--text-secondary);" title="Zoom In (+)">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
                         </button>
-                        <button onclick="cropper.rotate(-90)" class="p-2 rounded-lg" style="background-color: var(--bg-input); color: var(--text-secondary);" title="Rotate">
+                        <button onclick="cropRotate(-90)" class="p-2 rounded-lg hover:opacity-80 transition-opacity" style="background-color: var(--bg-input); color: var(--text-secondary);" title="Rotate Left (R)">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        </button>
+                        <button onclick="cropReset()" class="p-2 rounded-lg hover:opacity-80 transition-opacity" style="background-color: var(--bg-input); color: var(--text-secondary);" title="Reset (Space)">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         </button>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="closeCropModal()" class="px-4 py-2 rounded-lg" style="background-color: var(--bg-input); color: var(--text-secondary);">Batal</button>
-                        <button onclick="uploadCroppedImage()" class="px-4 py-2 rounded-lg font-medium btn-primary">
+                        <button onclick="closeCropModal()" class="px-4 py-2 rounded-lg hover:opacity-80 transition-opacity" style="background-color: var(--bg-input); color: var(--text-secondary);" title="Batal (Esc)">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            Batal
+                        </button>
+                        <button onclick="uploadCroppedImage()" class="px-4 py-2 rounded-lg font-medium btn-primary hover:opacity-90 transition-opacity" title="Simpan (Enter)">
                             <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             Simpan
                         </button>
                     </div>
+                </div>
+                
+                <!-- Keyboard shortcuts info -->
+                <div class="mt-2 text-xs text-center" style="color: var(--text-secondary);">
+                    <strong>Kontrol:</strong> 
+                    <span class="mx-1">Drag (Posisi)</span>
+                    <span class="mx-1">Scroll/+/- (Zoom)</span>
+                    <span class="mx-1">R (Putar)</span>
+                    <span class="mx-1">Space (Reset)</span>
+                    <span class="mx-1">Enter (Simpan)</span>
+                    <span class="mx-1">Esc (Batal)</span>
                 </div>
             </div>
         </div>
@@ -226,12 +243,12 @@
                         @foreach($securityQuestions ?? [] as $key => $question)
                         <option value="{{ $key }}" {{ $user->security_question_1 == $key ? 'selected' : '' }}>{{ $question }}</option>
                         @endforeach
-                        <option value="0" {{ $user->security_question_1 === 0 ? 'selected' : '' }}>Tulis pertanyaan sendiri...</option>
+                        <option value="0" {{ $user->security_question_1 === '0' || $user->security_question_1 === 0 ? 'selected' : '' }}>Tulis pertanyaan sendiri...</option>
                     </select>
                 </div>
                 
                 <!-- Custom Question Input -->
-                <div id="customQuestionWrapper" class="{{ $user->security_question_1 === 0 ? '' : 'hidden' }}">
+                <div id="customQuestionWrapper" class="{{ ($user->security_question_1 === 0 || $user->security_question_1 === '0') ? '' : 'hidden' }}">
                     <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Pertanyaan Custom</label>
                     <input type="text" name="custom_security_question" id="customQuestion" value="{{ $user->custom_security_question ?? '' }}" placeholder="Tulis pertanyaan Anda sendiri..." class="input w-full">
                 </div>
@@ -255,12 +272,17 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-let cropper = null;
-let formChanged = false;
-const userBirthDate = '{{ $user->birth_date?->format("Y-m-d") ?? "" }}';
-const Toast = Swal.mixin({ 
-    toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 
-});
+// Ensure single execution
+if (!window.profileScriptLoaded) {
+    window.profileScriptLoaded = true;
+
+    // Global variables
+    window.cropper = null;
+    window.formChanged = false;
+    window.userBirthDate = '{{ $user->birth_date?->format("Y-m-d") ?? "" }}';
+    window.Toast = Swal.mixin({ 
+        toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 
+    });
 
 // Profile edit toggle
 function toggleProfileEdit() {
@@ -298,26 +320,62 @@ function cancelProfileEdit() {
     document.getElementById('profileForm').reset();
 }
 
-// Crop functionality
-function openCropModal(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = document.getElementById('crop-image');
-            img.src = e.target.result;
-            
-            const backdrop = document.getElementById('crop-modal-backdrop');
-            const modal = document.getElementById('crop-modal');
-            backdrop.style.display = 'block';
-            modal.style.display = 'block';
-            void modal.offsetWidth;
-            backdrop.classList.add('active');
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-            
-            if (cropper) cropper.destroy();
-            
-            cropper = new Cropper(img, {
+// Crop functionality - Enhanced and debugged
+window.openCropModal = function(input) {
+    if (!input || !input.files || !input.files[0]) {
+        return;
+    }
+    
+    const file = input.files[0];
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        Swal.fire({
+            icon: 'error',
+            title: 'File Tidak Valid',
+            text: 'Silakan pilih file gambar (JPG, PNG, GIF, WebP)'
+        });
+        input.value = '';
+        return;
+    }
+    
+    // Validate file size (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+        Swal.fire({
+            icon: 'error',
+            title: 'File Terlalu Besar',
+            text: 'Ukuran file maksimal 2MB'
+        });
+        input.value = '';
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = document.getElementById('crop-image');
+        const backdrop = document.getElementById('crop-modal-backdrop');
+        const modal = document.getElementById('crop-modal');
+        
+        if (!img || !backdrop || !modal) {
+            return;
+        }
+        
+        img.src = e.target.result;
+        
+        // Show modal with animation
+        backdrop.classList.add('active');
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // Destroy existing cropper
+        if (window.cropper) {
+            window.cropper.destroy();
+            window.cropper = null;
+        }
+        
+        // Initialize new cropper
+        setTimeout(() => {
+            window.cropper = new Cropper(img, {
                 aspectRatio: 1,
                 viewMode: 1,
                 dragMode: 'move',
@@ -328,68 +386,211 @@ function openCropModal(input) {
                 center: true,
                 highlight: false,
                 background: false,
+                checkOrientation: false,
                 ready: function() {
+                    // Apply circular mask
                     const cropBox = document.querySelector('.cropper-crop-box');
-                    if (cropBox) cropBox.style.borderRadius = '50%';
                     const viewBox = document.querySelector('.cropper-view-box');
+                    if (cropBox) cropBox.style.borderRadius = '50%';
                     if (viewBox) viewBox.style.borderRadius = '50%';
                 }
             });
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-function closeCropModal() {
-    const backdrop = document.getElementById('crop-modal-backdrop');
-    const modal = document.getElementById('crop-modal');
-    backdrop.classList.remove('active');
-    modal.classList.remove('active');
-    document.body.style.overflow = '';
-    setTimeout(() => {
-        backdrop.style.display = 'none';
-        modal.style.display = 'none';
-    }, 200);
-    document.getElementById('photo-input').value = '';
-    if (cropper) {
-        cropper.destroy();
-        cropper = null;
-    }
-}
-
-function uploadCroppedImage() {
-    if (!cropper) return;
+        }, 100);
+    };
     
-    cropper.getCroppedCanvas({
-        width: 256,
-        height: 256,
-        imageSmoothingEnabled: true,
-        imageSmoothingQuality: 'high'
-    }).toBlob(function(blob) {
-        const formData = new FormData();
-        formData.append('avatar', blob, 'avatar.jpg');
-        formData.append('_token', '{{ csrf_token() }}');
-        formData.append('_method', 'PATCH');
-        
-        fetch('{{ route("profile.update") }}', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('profile-preview').src = data.avatar_url + '?t=' + Date.now();
-                closeCropModal();
-                Toast.fire({ icon: 'success', title: 'Foto profil berhasil diperbarui!' });
-            } else {
-                alert(data.message || 'Gagal memperbarui foto profil');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Terjadi kesalahan saat memperbarui foto profil');
+    reader.onerror = function(error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Gagal membaca file gambar'
         });
-    }, 'image/jpeg', 0.9);
+        input.value = '';
+    };
+    
+    reader.readAsDataURL(file);
+}
+
+// Enhanced crop control functions
+window.cropZoom = function(ratio) {
+    if (window.cropper) {
+        window.cropper.zoom(ratio);
+    }
+};
+
+window.cropRotate = function(degree) {
+    if (window.cropper) {
+        window.cropper.rotate(degree);
+    }
+};
+
+window.cropReset = function() {
+    if (window.cropper) {
+        window.cropper.reset();
+    }
+};
+
+// Keyboard shortcuts for crop modal
+function handleCropKeyboard(e) {
+    if (!document.getElementById('crop-modal').classList.contains('active')) return;
+    
+    e.preventDefault();
+    
+    switch(e.key) {
+        case 'Escape':
+            closeCropModal();
+            break;
+        case 'Enter':
+            uploadCroppedImage();
+            break;
+        case '+':
+        case '=':
+            cropZoom(0.1);
+            break;
+        case '-':
+        case '_':
+            cropZoom(-0.1);
+            break;
+        case 'r':
+        case 'R':
+            cropRotate(-90);
+            break;
+        case ' ':
+            cropReset();
+            break;
+    }
+}
+
+// Add keyboard event listener
+document.addEventListener('keydown', handleCropKeyboard);
+
+window.closeCropModal = function() {
+    document.getElementById('crop-modal-backdrop').classList.remove('active');
+    document.getElementById('crop-modal').classList.remove('active');
+    document.body.style.overflow = '';
+    document.getElementById('photo-input').value = '';
+    if (window.cropper) {
+        window.cropper.destroy();
+        window.cropper = null;
+    }
+};
+
+window.uploadCroppedImage = function() {
+    if (!window.cropper) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Editor gambar belum siap. Silakan coba lagi.'
+        });
+        return;
+    }
+    
+    // Show loading
+    Swal.fire({
+        title: 'Mengupload...',
+        text: 'Mohon tunggu sebentar',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => Swal.showLoading()
+    });
+    
+    try {
+        // Get cropped canvas
+        const canvas = window.cropper.getCroppedCanvas({
+            width: 256,
+            height: 256,
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high',
+            fillColor: '#ffffff'
+        });
+        
+        if (!canvas) {
+            Swal.close();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Gagal memproses gambar. Silakan coba lagi.'
+            });
+            return;
+        }
+        
+        canvas.toBlob(function(blob) {
+            if (!blob) {
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Gagal mengkonversi gambar. Silakan coba lagi.'
+                });
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('avatar', blob, 'profile.jpg');
+            formData.append('_token', '{{ csrf_token() }}');
+            formData.append('_method', 'PATCH');
+            
+            fetch('{{ route("profile.update") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return response.json();
+            })
+            .then(data => {
+                Swal.close();
+                
+                if (data.success) {
+                    // Update all profile images on page
+                    const profileImages = document.querySelectorAll('#profile-preview, .profile-avatar, [data-profile-image]');
+                    const newSrc = data.avatar_url + '?t=' + Date.now();
+                    
+                    profileImages.forEach(img => {
+                        if (img) img.src = newSrc;
+                    });
+                    
+                    closeCropModal();
+                    Toast.fire({ 
+                        icon: 'success', 
+                        title: data.message || 'Foto profil berhasil diperbarui!' 
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Upload Gagal',
+                        text: data.message || 'Gagal memperbarui foto profil'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.close();
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error Upload',
+                    text: `Terjadi kesalahan: ${error.message}`,
+                    footer: 'Silakan periksa koneksi internet dan coba lagi.'
+                });
+            });
+        }, 'image/jpeg', 0.85);
+        
+    } catch (error) {
+        Swal.close();
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Error Crop',
+            text: 'Gagal memproses gambar. Silakan pilih gambar lain.'
+        });
+    }
 }
 
 function openVerifyBirthModal() {
@@ -421,29 +622,49 @@ function toggleCustomQuestion() {
     }
 }
 
-// Show session messages
-@if(session()->has('success'))
-Toast.fire({ icon: 'success', title: '{{ session("success") }}' });
-@endif
-@if(session()->has('error'))
-Toast.fire({ icon: 'error', title: '{{ session("error") }}' });
-@endif
+    // Show session messages
+    @if(session()->has('success'))
+    window.Toast.fire({ icon: 'success', title: '{{ session("success") }}' });
+    @endif
+    @if(session()->has('error'))
+    window.Toast.fire({ icon: 'error', title: '{{ session("error") }}' });
+    @endif
+
+} // Close profileScriptLoaded if statement
 </script>
 <style>
-.cropper-view-box, .cropper-face { border-radius: 50%; }
+.cropper-view-box, 
+.cropper-face { 
+    border-radius: 50%; 
+}
+.cropper-crop-box {
+    border-radius: 50%;
+}
+/* Hide crop box lines since it's fixed */
+.cropper-line,
+.cropper-point {
+    display: none;
+}
+/* Style the crop area border */
+.cropper-crop-box {
+    border: 2px solid var(--accent-color, #3b82f6) !important;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
 .modal-backdrop {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.5);
     z-index: 1000;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 .modal-backdrop.active {
     opacity: 1;
+    visibility: visible;
 }
 .modal-content {
     position: fixed;
@@ -451,10 +672,14 @@ Toast.fire({ icon: 'error', title: '{{ session("error") }}' });
     left: 50%;
     transform: translate(-50%, -50%) scale(0.95);
     z-index: 1001;
-    transition: transform 0.2s ease;
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.2s ease, opacity 0.2s ease, visibility 0.2s ease;
 }
 .modal-content.active {
     transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    visibility: visible;
 }
 </style>
 @endpush

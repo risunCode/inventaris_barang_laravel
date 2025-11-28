@@ -66,13 +66,41 @@ class RegisterController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'referral_code' => ['nullable', 'string'],
-        ]);
+        // In debug mode, let validation errors show naturally
+        if (app()->environment('local', 'testing')) {
+            $validated = $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+                'password' => ['required', 'string', 'min:8', 'confirmed'],
+                'phone' => ['nullable', 'string', 'max:20'], // Optional phone
+                'referral_code' => ['nullable', 'string'],
+            ], [
+                'password.confirmed' => 'Konfirmasi password tidak cocok.',
+                'password.min' => 'Password minimal 8 karakter.',
+                'email.unique' => 'Email sudah terdaftar.',
+                'email.email' => 'Format email tidak valid.',
+                'name.required' => 'Nama lengkap wajib diisi.',
+                'email.required' => 'Email wajib diisi.',
+                'password.required' => 'Password wajib diisi.',
+            ]);
+        } else {
+            // Production mode - with custom error messages
+            $validated = $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+                'password' => ['required', 'string', 'min:8', 'confirmed'],
+                'phone' => ['nullable', 'string', 'max:20'], // Optional phone
+                'referral_code' => ['nullable', 'string'],
+            ], [
+                'password.confirmed' => 'Konfirmasi password tidak cocok.',
+                'password.min' => 'Password minimal 8 karakter.',
+                'email.unique' => 'Email sudah terdaftar.',
+                'email.email' => 'Format email tidak valid.',
+                'name.required' => 'Nama lengkap wajib diisi.',
+                'email.required' => 'Email wajib diisi.',
+                'password.required' => 'Password wajib diisi.',
+            ]);
+        }
 
         // Validate referral code if provided
         $referralCode = null;
@@ -82,40 +110,63 @@ class RegisterController extends Controller
             $referralCode = ReferralCode::where('code', strtoupper($validated['referral_code']))->first();
             
             if (!$referralCode) {
-                return back()->withErrors(['referral_code' => 'Kode referral tidak ditemukan.']);
+                return back()
+                    ->withInput()
+                    ->withErrors(['referral_code' => 'Kode referral tidak ditemukan.']);
             }
             
             if (!$referralCode->isValid()) {
-                return back()->withErrors(['referral_code' => 'Kode referral tidak valid atau sudah tidak aktif.']);
+                return back()
+                    ->withInput()
+                    ->withErrors(['referral_code' => 'Kode referral tidak valid atau sudah tidak aktif.']);
             }
             
             // Get role from referral code
             $assignedRole = $referralCode->role ?? 'user';
         }
 
-        // Create user with assigned role
-        $user = User::create([
-            'name' => trim($validated['name']),
-            'email' => strtolower(trim($validated['email'])),
-            'password' => Hash::make($validated['password']),
-            'phone' => $validated['phone'],
-            'role' => $assignedRole,
-            'is_active' => true,
-            'security_setup_completed' => false,
-        ]);
+        try {
+            // Create user with assigned role
+            $user = User::create([
+                'name' => trim($validated['name']),
+                'email' => strtolower(trim($validated['email'])),
+                'password' => Hash::make($validated['password']),
+                'phone' => $validated['phone'] ?? null, // Fix: Handle optional phone
+                'role' => $assignedRole,
+                'is_active' => true,
+                'security_setup_completed' => false,
+            ]);
 
-        // Track referral code usage if used
-        if ($referralCode) {
-            $referralCode->increment('used_count');
-            $referralCode->users()->attach($user->id, ['used_at' => now()]);
+            // Track referral code usage if used
+            if ($referralCode) {
+                $referralCode->increment('used_count');
+                $referralCode->users()->attach($user->id, ['used_at' => now()]);
+            }
+
+            // Auto login
+            Auth::login($user);
+            ActivityLog::log('register', 'Registrasi akun baru' . ($referralCode ? ' dengan kode referral: ' . $referralCode->code : ' tanpa kode referral'));
+
+            // Redirect ke setup security (WAJIB)
+            return redirect()->route('security.setup');
+
+        } catch (\Exception $e) {
+            \Log::error('Registration failed: ' . $e->getMessage(), [
+                'input' => $request->except(['password', 'password_confirmation'])
+            ]);
+            
+            // In debug mode, show the actual error
+            if (app()->environment('local', 'testing')) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Registrasi gagal: ' . $e->getMessage());
+            }
+            
+            // Production mode - generic error
+            return back()
+                ->withInput()
+                ->with('error', 'Registrasi gagal. Silakan periksa kembali data Anda dan coba lagi.');
         }
-
-        // Auto login
-        Auth::login($user);
-        ActivityLog::log('register', 'Registrasi akun baru' . ($referralCode ? ' dengan kode referral: ' . $referralCode->code : ' tanpa kode referral'));
-
-        // Redirect ke setup security (WAJIB)
-        return redirect()->route('security.setup');
     }
 
     /**
@@ -163,20 +214,20 @@ class RegisterController extends Controller
             ]);
 
             $user = Auth::user();
-            $questionValue = (int) $validated['security_question_1'];
+            $questionValue1 = (int) $validated['security_question_1'];
 
             // Determine the question to save (E-Surat-Perkim style)
-            $questionToSave = $questionValue;
-            if ($questionValue === 0) {
-                $questionToSave = 'custom:' . trim($validated['custom_security_question']);
+            $questionToSave1 = $questionValue1;
+            if ($questionValue1 === 0) {
+                $questionToSave1 = 'custom:' . trim($validated['custom_security_question']);
             }
 
             $user->update([
                 'birth_date' => $validated['birth_date'],
-                'security_question_1' => $questionToSave,
+                'security_question_1' => $questionValue1, // Save as integer (0 for custom)
                 'security_answer_1' => Hash::make(strtolower(trim($validated['security_answer_1']))),
+                'custom_security_question' => $questionValue1 === 0 ? trim($validated['custom_security_question']) : null, // Save custom question separately
                 'security_setup_completed' => true,
-                'custom_security_question' => null, // Clear since we store in security_question_1
             ]);
 
             ActivityLog::log('security_setup', 'Setup keamanan akun selesai');
@@ -185,11 +236,22 @@ class RegisterController extends Controller
                 ->with('success', 'Setup keamanan berhasil. Selamat datang!');
                 
         } catch (\Exception $e) {
-            \Log::error('Security setup failed: ' . $e->getMessage());
+            \Log::error('Security setup failed: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'input' => $request->except(['security_answer_1'])
+            ]);
             
+            // In debug mode, show actual error
+            if (app()->environment('local', 'testing')) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Setup keamanan gagal: ' . $e->getMessage());
+            }
+            
+            // Production mode - user-friendly error
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Gagal menyimpan setup keamanan. Silakan coba lagi.');
+                ->with('error', 'Gagal menyimpan setup keamanan. Silakan periksa data Anda dan coba lagi.');
         }
     }
 }

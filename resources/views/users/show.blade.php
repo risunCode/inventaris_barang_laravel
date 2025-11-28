@@ -17,7 +17,13 @@
         </div>
         <div class="flex items-center gap-2">
             <span class="badge {{ $user->role === 'admin' ? 'badge-warning' : ($user->role === 'staff' ? 'badge-info' : 'badge-gray') }}">
-                {{ ucfirst($user->role ?? 'User') }}
+                @if($user->role === 'admin')
+                    Admin
+                @elseif($user->role === 'staff')
+                    Staff
+                @else
+                    Staff
+                @endif
             </span>
             @if($user->is_active)
                 <span class="badge badge-success">Aktif</span>
@@ -47,7 +53,7 @@
                 <!-- Referred By -->
                 <div class="rounded-lg border p-4" style="background-color: var(--bg-card); border-color: var(--border-color);">
                     <p class="text-xs mb-1" style="color: var(--text-secondary);">Direferensikan Oleh</p>
-                    <p class="text-sm font-medium" style="color: var(--text-primary);">{{ $user->referrer?->name ?? 'User Pertama' }}</p>
+                    <p class="text-sm font-medium" style="color: var(--text-primary);">{{ $user->referrer?->name ?? 'Admin Pertama' }}</p>
                 </div>
 
                 <!-- Contact -->
@@ -60,7 +66,7 @@
             <!-- Referrals -->
             @if($user->referrals->count() > 0)
             <div class="rounded-lg border p-4" style="background-color: var(--bg-card); border-color: var(--border-color);">
-                <h3 class="text-sm font-semibold mb-3" style="color: var(--text-primary);">User yang Direferensikan ({{ $user->referrals->count() }})</h3>
+                <h3 class="text-sm font-semibold mb-3" style="color: var(--text-primary);">Staff yang Direferensikan ({{ $user->referrals->count() }})</h3>
                 <div class="flex flex-wrap gap-2">
                     @foreach($user->referrals as $referral)
                     <a href="{{ route('users.show', $referral) }}" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm hover:opacity-80" style="background-color: var(--bg-input); color: var(--text-primary);">

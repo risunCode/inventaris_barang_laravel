@@ -3,14 +3,22 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
             <h1 class="text-xl font-bold" style="color: var(--text-primary);">Kelola Kode Referral</h1>
-            <p class="text-sm" style="color: var(--text-secondary);">Buat dan kelola kode referral untuk pendaftaran user baru</p>
+            <p class="text-sm" style="color: var(--text-secondary);">
+                @can('referral-codes.manage')
+                    Buat dan kelola kode referral untuk pendaftaran user baru
+                @else
+                    Buat dan kelola kode referral Anda sendiri
+                @endcan
+            </p>
         </div>
+        @can('referral-codes.create')
         <button onclick="openCreateModal()" class="btn btn-primary">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
             Buat Kode Baru
         </button>
+        @endcan
     </div>
 
     <!-- Stats -->
@@ -49,6 +57,7 @@
                     <tr>
                         <th class="px-4 py-3 text-left font-medium" style="color: var(--text-secondary);">Kode</th>
                         <th class="px-4 py-3 text-left font-medium" style="color: var(--text-secondary);">Deskripsi</th>
+                        <th class="px-4 py-3 text-left font-medium" style="color: var(--text-secondary);">Role</th>
                         <th class="px-4 py-3 text-left font-medium" style="color: var(--text-secondary);">Penggunaan</th>
                         <th class="px-4 py-3 text-left font-medium" style="color: var(--text-secondary);">Masa Aktif</th>
                         <th class="px-4 py-3 text-left font-medium" style="color: var(--text-secondary);">Status</th>
@@ -102,20 +111,28 @@
                         </td>
                         <td class="px-4 py-3">
                             <div class="flex justify-end gap-1">
-                                <button onclick="toggleCode({{ $code->id }}, {{ $code->is_active ? 'true' : 'false' }})" 
-                                        class="p-1.5 rounded hover:bg-gray-100" title="{{ $code->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
-                                    @if($code->is_active)
-                                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                @can('referral-codes.manage')
+                                    <!-- Admin: Can manage all codes -->
+                                    <button onclick="openEditModal({{ json_encode($code) }})" class="p-1.5 rounded hover:bg-gray-100" title="Edit">
+                                        <svg class="w-4 h-4" style="color: var(--accent-color);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </button>
+                                    <button onclick="deleteCode({{ $code->id }})" class="p-1.5 rounded hover:bg-red-50" title="Hapus">
+                                        <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                @else
+                                    <!-- User: Can only manage own codes -->
+                                    @if($code->created_by === auth()->id())
+                                        <button onclick="openEditModal({{ json_encode($code) }})" class="p-1.5 rounded hover:bg-gray-100" title="Edit">
+                                            <svg class="w-4 h-4" style="color: var(--accent-color);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                        </button>
+                                        <button onclick="deleteCode({{ $code->id }})" class="p-1.5 rounded hover:bg-red-50" title="Hapus">
+                                            <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
                                     @else
-                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/></svg>
+                                        <!-- Not owner - no actions -->
+                                        <span class="text-xs text-gray-400">-</span>
                                     @endif
-                                </button>
-                                <button onclick="openEditModal({{ json_encode($code) }})" class="p-1.5 rounded hover:bg-gray-100" title="Edit">
-                                    <svg class="w-4 h-4" style="color: var(--accent-color);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                </button>
-                                <button onclick="deleteCode({{ $code->id }})" class="p-1.5 rounded hover:bg-red-50" title="Hapus">
-                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                </button>
+                                @endcan
                             </div>
                         </td>
                     </tr>
@@ -161,11 +178,24 @@
                 <div>
                     <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Role yang Diberikan</label>
                     <select name="role" class="input w-full">
-                        <option value="user">User (Default)</option>
-                        <option value="staff">Staff</option>
-                        <option value="admin">Admin</option>
+                        @if(auth()->user()->role === 'admin')
+                            <option value="admin">Admin</option>
+                            <option value="staff">Staff</option>
+                            <option value="user" selected>User (Default)</option>
+                        @elseif(auth()->user()->role === 'staff')
+                            <option value="staff">Staff</option>
+                            <option value="user" selected>User (Default)</option>
+                        @else
+                            <option value="user" selected>User</option>
+                        @endif
                     </select>
-                    <p class="text-xs mt-1" style="color: var(--text-secondary);">Role yang akan diberikan ke user saat registrasi</p>
+                    @if(auth()->user()->role === 'admin')
+                        <p class="text-xs mt-1" style="color: var(--text-secondary);">Admin dapat membuat kode untuk semua role</p>
+                    @elseif(auth()->user()->role === 'staff')
+                        <p class="text-xs mt-1" style="color: var(--text-secondary);">Staff dapat membuat kode untuk staff dan user</p>
+                    @else
+                        <p class="text-xs mt-1" style="color: var(--text-secondary);">User dapat membuat kode untuk user</p>
+                    @endif
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -211,11 +241,34 @@
                 <div>
                     <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Role yang Diberikan</label>
                     <select name="role" id="editRole" class="input w-full">
-                        <option value="user">User (Default)</option>
-                        <option value="staff">Staff</option>
-                        <option value="admin">Admin</option>
+                        @if(auth()->user()->role === 'admin')
+                            <option value="admin">Admin</option>
+                            <option value="staff">Staff</option>
+                            <option value="user">User (Default)</option>
+                        @elseif(auth()->user()->role === 'staff')
+                            <option value="staff">Staff</option>
+                            <option value="user">User (Default)</option>
+                        @else
+                            <option value="user">User</option>
+                        @endif
                     </select>
-                    <p class="text-xs mt-1" style="color: var(--text-secondary);">Role yang akan diberikan ke user saat registrasi</p>
+                    @if(auth()->user()->role === 'admin')
+                        <p class="text-xs mt-1" style="color: var(--text-secondary);">Admin dapat mengubah role untuk semua level</p>
+                    @elseif(auth()->user()->role === 'staff')
+                        <p class="text-xs mt-1" style="color: var(--text-secondary);">Staff dapat mengubah role untuk staff dan user</p>
+                    @else
+                        <p class="text-xs mt-1" style="color: var(--text-secondary);">User dapat membuat kode untuk user</p>
+                    @endif
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Status Kode</label>
+                    <div class="flex items-center gap-3">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="is_active" id="editIsActive" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="text-sm" style="color: var(--text-primary);">Kode Aktif</span>
+                        </label>
+                        <p class="text-xs" style="color: var(--text-secondary);">Nonaktif = Tidak bisa digunakan registrasi</p>
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -271,9 +324,30 @@
         }
 
         async function generateCode(inputId) {
-            const res = await fetch('{{ route("referral-codes.generate") }}');
-            const data = await res.json();
-            document.getElementById(inputId).value = data.code;
+            try {
+                const res = await fetch('{{ route("referral-codes.generate") }}', {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    }
+                });
+                
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                
+                const data = await res.json();
+                
+                if (data.success === false) {
+                    throw new Error(data.message || 'Generate failed');
+                }
+                
+                document.getElementById(inputId).value = data.code;
+            } catch (error) {
+                console.error('Generate code error:', error);
+                alert('Gagal generate kode: ' + error.message);
+            }
         }
 
         async function submitCreate(e) {

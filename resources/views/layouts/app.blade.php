@@ -125,7 +125,7 @@
                 </a>
                 @endcan
 
-                @can('users.view')
+                @if(auth()->user()->role === 'admin')
                 <div class="pt-4 mt-4 border-t border-gray-200">
                     <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Pengaturan</p>
                     <a href="{{ route('users.index') }}" 
@@ -134,6 +134,19 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                         </svg>
                         Pengguna
+                    </a>
+                </div>
+                @endif
+
+                @can('referral-codes.own')
+                <div class="pt-4 mt-4 border-t border-gray-200">
+                    <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Pengaturan</p>
+                    <a href="{{ route('referral-codes.index') }}" 
+                       class="sidebar-link {{ request()->routeIs('referral-codes.*') ? 'sidebar-link-active' : '' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                        </svg>
+                        Kode Referral
                     </a>
                 </div>
                 @endcan
@@ -159,6 +172,27 @@
 
                     <!-- Right side -->
                     <div class="flex items-center gap-3">
+                        <!-- Create Referral Code Button -->
+                        @can('referral-codes.create')
+                        <button onclick="openCreateReferralModal()" class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-white transition-colors" style="background-color: var(--accent-color);">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                            </svg>
+                            Buat Kode Referral
+                        </button>
+                        @else
+                            @if(auth()->check())
+                                @if(app()->environment('local'))
+                                <button class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-red-600 border border-red-300">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    DEBUG: No Permission ({{ auth()->user()->role }})
+                                </button>
+                                @endif
+                            @endif
+                        @endcan
+
                         <!-- Notifications -->
                         <x-notification-bell />
 
@@ -183,6 +217,11 @@
                                 <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                     Profil Saya
                                 </a>
+                                @can('referral-codes.own')
+                                <a href="{{ route('referral-codes.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    Kode Referral Saya
+                                </a>
+                                @endcan
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
@@ -221,5 +260,19 @@
     </div>
 
     @stack('scripts')
+    
+    <!-- Global Scripts -->
+    <script>
+        // Global function to open referral create modal from top navigation
+        function openCreateReferralModal() {
+            // Check if we're on referral codes page
+            if (typeof openCreateModal === 'function') {
+                openCreateModal();
+            } else {
+                // Redirect to referral codes page if modal function not available
+                window.location.href = '{{ route("referral-codes.index") }}';
+            }
+        }
+    </script>
 </body>
 </html>

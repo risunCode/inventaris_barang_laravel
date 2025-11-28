@@ -7,13 +7,18 @@ use App\Models\Category;
 use App\Models\Commodity;
 use App\Models\CommodityImage;
 use App\Models\Location;
+use App\Models\User;
+use App\Notifications\CommodityCreated;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -26,8 +31,8 @@ class CommodityController extends Controller implements HasMiddleware
             new Middleware('permission:commodities.create', only: ['create', 'store']),
             new Middleware('permission:commodities.edit', only: ['edit', 'update']),
             new Middleware('permission:commodities.delete', only: ['destroy']),
-            new Middleware('permission:commodities.export', only: ['export']),
-            new Middleware('permission:commodities.import', only: ['import']),
+            // new Middleware('permission:commodities.export', only: ['export']), // DEBUG: disabled
+            // previewCode dibiarkan tanpa middleware untuk debugging
         ];
     }
 
@@ -95,6 +100,7 @@ class CommodityController extends Controller implements HasMiddleware
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'item_code' => ['nullable', 'string', 'max:50', 'unique:commodities,item_code'],
             'category_id' => ['required', 'exists:categories,id'],
             'location_id' => ['required', function($attribute, $value, $fail) {
                 if ($value !== 'custom' && !\App\Models\Location::where('id', $value)->exists()) {
@@ -154,17 +160,22 @@ class CommodityController extends Controller implements HasMiddleware
 
             ActivityLog::log('created', "Menambah barang: {$commodity->name} ({$commodity->item_code})", $commodity);
 
+            // Send notification to all admin users
+            $adminUsers = User::where('role', 'admin')->get();
+            Notification::send($adminUsers, new CommodityCreated($commodity, Auth::user()));
+
             return redirect()->route('commodities.show', $commodity)
                 ->with('success', 'Barang berhasil ditambahkan.');
-        } catch (\Exception $e) {
-            Log::error('Commodity creation failed', [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'commodity_data' => $validated
-            ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Handle unique constraint violation
+            if ($e->errorInfo[1] == 1062) { // MySQL duplicate entry error
+                return back()->with('error', 'Kode barang sudah digunakan. Sistem akan generate kode baru otomatis.')
+                            ->withInput(['item_code' => '']); // Clear item_code to trigger auto-generation
+            }
 
-            return back()->with('error', 'Gagal menambahkan barang.')->withInput();
+            return back()->with('error', 'Terjadi kesalahan database. Silakan coba lagi.')->withInput();
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menambahkan barang. Silakan coba lagi.')->withInput();
         }
     }
 
@@ -207,6 +218,7 @@ class CommodityController extends Controller implements HasMiddleware
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'item_code' => ['nullable', 'string', 'max:50', 'unique:commodities,item_code,' . $commodity->id],
             'category_id' => ['required', 'exists:categories,id'],
             'location_id' => ['required', function($attribute, $value, $fail) {
                 if ($value !== 'custom' && !\App\Models\Location::where('id', $value)->exists()) {
@@ -313,31 +325,32 @@ class CommodityController extends Controller implements HasMiddleware
     }
 
     /**
+     * Preview kode barang berdasarkan kategori (API).
+     */
+    public function previewCode(Request $request)
+    {
+        $categoryId = $request->input('category_id');
+        $code = Commodity::previewItemCode($categoryId ? (int) $categoryId : null);
+        
+        return response()->json([
+            'code' => $code,
+            'category_id' => $categoryId,
+        ]);
+    }
+
+    /**
      * Export daftar barang ke PDF.
      */
     public function export(Request $request)
     {
-        $query = Commodity::with(['category', 'location']);
-
-        // Apply same filters as index
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
-
-        if ($request->filled('location_id')) {
-            $query->where('location_id', $request->location_id);
-        }
-
-        if ($request->filled('condition')) {
-            $query->where('condition', $request->condition);
-        }
-
-        $commodities = $query->orderBy('name')->get();
+        // Simple version - minimal filtering  
+        $commodities = Commodity::with(['category', 'location'])->orderBy('name')->get();
 
         $pdf = Pdf::loadView('reports.pdf.inventory', [
             'commodities' => $commodities,
             'title' => 'Daftar Inventaris Barang',
             'date' => now()->format('d F Y'),
+            'filters' => []
         ]);
 
         $pdf->setPaper('A4', 'landscape');

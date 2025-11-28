@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\Commodity;
 use App\Models\Maintenance;
+use App\Models\User;
+use App\Notifications\MaintenanceScheduled;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
 class MaintenanceController extends Controller implements HasMiddleware
@@ -104,6 +107,10 @@ class MaintenanceController extends Controller implements HasMiddleware
         }
 
         ActivityLog::log('created', "Menambah log maintenance untuk barang: " . ($maintenanceLog->commodity->name ?? 'Barang tidak ditemukan'), $maintenanceLog);
+
+        // Send notification to admin users about maintenance
+        $adminUsers = User::where('role', 'admin')->get();
+        Notification::send($adminUsers, new MaintenanceScheduled($maintenanceLog, Auth::user()));
 
         return redirect()->route('maintenance.show', $maintenanceLog)
             ->with('success', 'Log maintenance berhasil ditambahkan.');

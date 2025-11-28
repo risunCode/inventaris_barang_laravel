@@ -1,7 +1,6 @@
 {
-    "$schema": "https://www.schemastore.org/package.json",
     "name": "sibarang",
-    "version": "0.0.5",
+    "version": "0.0.7-beta",
     "description": "SIBARANG - Sistem Inventaris Barang",
     "private": true,
     "type": "module",

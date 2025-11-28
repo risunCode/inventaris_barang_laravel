@@ -1,9 +1,3 @@
-@php
-    $unreadCount = auth()->user()->unreadNotifications->count();
-    $readCount = auth()->user()->readNotifications->count();
-    $totalCount = $notifications->total();
-@endphp
-
 <x-app-layout title="Notifikasi">
     <div class="space-y-6">
         <!-- Header -->
@@ -13,7 +7,7 @@
                 <p style="color: var(--text-secondary);">Semua notifikasi sistem</p>
             </div>
             @if($unreadCount > 0)
-            <form action="{{ route('notifications.read-all') }}" method="POST">
+            <form action="{{ route('notifications.mark-all-read') }}" method="POST">
                 @csrf
                 <button class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm hover:opacity-80" style="background-color: var(--bg-input); color: var(--text-secondary);">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -102,18 +96,37 @@
                                 <p class="text-xs" style="color: var(--text-secondary);">{{ $notification->created_at->format('H:i') }} • {{ $notification->created_at->diffForHumans() }}</p>
                             </td>
                             <td class="px-4 py-4 text-right">
-                                <div class="flex items-center justify-end gap-2">
+                                <div class="flex items-center justify-end gap-2 flex-wrap">
                                     @if(!$notification->read_at)
                                     <form action="{{ route('notifications.read', $notification->id) }}" method="POST" class="inline">
                                         @csrf
                                         <button type="submit" class="p-2 rounded-lg hover:opacity-80" style="background-color: var(--bg-input); color: var(--text-secondary);" title="Tandai Dibaca">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            <i class="bx bx-check text-sm"></i>
                                         </button>
                                     </form>
                                     @endif
-                                    @if(isset($notification->data['url']))
-                                    <a href="{{ $notification->data['url'] }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm btn-primary">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                    
+                                    @if(isset($notification->data['actions']))
+                                        @foreach($notification->data['actions'] as $action)
+                                            @if(isset($action['method']) && $action['method'] === 'POST')
+                                            <form action="{{ $action['url'] }}" method="POST" class="inline">
+                                                @csrf
+                                                <button type="submit" class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium {{ $action['class'] ?? 'btn-primary' }}"
+                                                        onclick="return confirm('{{ $action['label'] === 'Tolak' ? 'Yakin tolak pengajuan ini?' : 'Yakin ' . strtolower($action['label']) . ' pengajuan ini?' }}')">
+                                                    <i class="{{ $action['icon'] ?? 'bx bx-link-external' }}"></i>
+                                                    {{ $action['label'] }}
+                                                </button>
+                                            </form>
+                                            @else
+                                            <a href="{{ $action['url'] }}" class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium {{ $action['class'] ?? 'btn-primary' }}">
+                                                <i class="{{ $action['icon'] ?? 'bx bx-link-external' }}"></i>
+                                                {{ $action['label'] }}
+                                            </a>
+                                            @endif
+                                        @endforeach
+                                    @elseif(isset($notification->data['url']))
+                                    <a href="{{ $notification->data['url'] }}" class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs btn-primary">
+                                        <i class="bx bx-show"></i>
                                         Lihat
                                     </a>
                                     @endif

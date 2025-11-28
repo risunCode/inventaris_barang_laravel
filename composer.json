@@ -5,7 +5,7 @@
     "description": "SIBARANG - Sistem Inventaris Barang",
     "keywords": ["laravel", "inventory", "sibarang"],
     "license": "GPL-3.0-or-later",
-    "version": "0.0.5",
+    "version": "0.0.7-beta",
     "require": {
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",

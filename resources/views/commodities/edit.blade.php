@@ -24,8 +24,14 @@
                     </div>
                     <div class="card-body">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            <div class="lg:col-span-2">
+                            <div>
                                 <x-form.input label="Nama Barang" name="name" :value="$commodity->name" required />
+                            </div>
+                            <div>
+                                <x-form.input label="Kode Barang" name="item_code" :value="$commodity->item_code" 
+                                              placeholder="Kode unik untuk barang ini" 
+                                              style="font-family: 'Consolas', 'Monaco', 'Courier New', monospace;" />
+                                <p class="text-xs text-gray-500 mt-1">Kosongkan untuk generate otomatis</p>
                             </div>
                             <x-form.select label="Kategori" name="category_id" :value="$commodity->category_id" required>
                                 @foreach($categories as $category)

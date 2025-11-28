@@ -21,19 +21,41 @@
                     
                     <!-- Informasi Dasar -->
                     <div class="theme-card rounded-xl border p-6" style="background-color: var(--bg-card); border-color: var(--border-color);">
-                        <h3 class="text-lg font-semibold mb-4" style="color: var(--text-primary);">Informasi Dasar</h3>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold" style="color: var(--text-primary);">Informasi Dasar</h3>
+                        </div>
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            <div class="lg:col-span-2">
+                            <div>
                                 <x-form.input label="Nama Barang" name="name" required placeholder="Masukkan nama barang" />
                             </div>
-                            <x-form.select label="Kategori" name="category_id" required>
-                                <option value="">Pilih Kategori</option>
-                                @foreach($categories as $category)
-                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                    {{ $category->name }}
-                                </option>
-                                @endforeach
-                            </x-form.select>
+                            <div>
+                                <label class="form-label">Kode Barang</label>
+                                <div class="flex gap-2">
+                                    <input type="text" name="item_code" id="itemCodeInput" class="form-input font-mono flex-1" 
+                                           placeholder="Otomatis berdasarkan kategori" value="{{ old('item_code') }}" 
+                                           style="font-family: 'Consolas', 'Monaco', 'Courier New', monospace;">
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <span id="codeHint">Pilih kategori untuk generate otomatis atau input manual</span>
+                                </p>
+                                @error('item_code')
+                                <p class="form-error">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label class="form-label">Kategori <span class="text-red-500">*</span></label>
+                                <select name="category_id" id="categorySelect" class="form-input" required onchange="updateItemCodePreview()">
+                                    <option value="">Pilih Kategori</option>
+                                    @foreach($categories as $category)
+                                    <option value="{{ $category->id }}" data-code="{{ $category->code }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                        {{ $category->name }} {{ $category->code ? "({$category->code})" : '' }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                                @error('category_id')
+                                <p class="form-error">{{ $message }}</p>
+                                @enderror
+                            </div>
                             <div>
                                 <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">
                                     Lokasi <span class="text-red-500">*</span>
@@ -184,6 +206,71 @@
             }
         }
 
+        // Update item code when category changes
+        function updateItemCodePreview() {
+            const categorySelect = document.getElementById('categorySelect');
+            const codeHint = document.getElementById('codeHint');
+            const itemCodeInput = document.getElementById('itemCodeInput');
+            const categoryId = categorySelect.value;
+            
+            if (categoryId) {
+                const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+                const categoryCode = selectedOption.getAttribute('data-code') || 'INV';
+                codeHint.textContent = `Format: ${categoryCode}-${new Date().getFullYear()}-XXXX`;
+                
+                // Auto-generate kode jika input kosong atau placeholder
+                const shouldGenerate = !itemCodeInput.value || 
+                                     itemCodeInput.value === 'Loading...' || 
+                                     itemCodeInput.value === 'Otomatis berdasarkan kategori' ||
+                                     itemCodeInput.getAttribute('data-auto-generated') !== 'false';
+                
+                if (shouldGenerate) {
+                    
+                    // Show loading state
+                    itemCodeInput.value = 'Loading...';
+                    itemCodeInput.disabled = true;
+                    
+                    // Fetch new code from server
+                    fetch(`{{ route('commodities.preview-code') }}?category_id=${categoryId}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+                        .then(response => response.json())
+                        .then(data => {
+                            itemCodeInput.value = data.code;
+                            itemCodeInput.setAttribute('data-auto-generated', 'true');
+                            itemCodeInput.disabled = false;
+                        })
+                        .catch(error => {
+                            itemCodeInput.value = '';
+                            itemCodeInput.setAttribute('data-auto-generated', 'false');
+                            itemCodeInput.disabled = false;
+                        });
+                }
+            } else {
+                codeHint.textContent = 'Pilih kategori untuk generate otomatis atau input manual';
+                // Clear code jika kategori dihapus dan kode auto-generated
+                if (itemCodeInput.getAttribute('data-auto-generated') === 'true') {
+                    itemCodeInput.value = '';
+                    itemCodeInput.setAttribute('data-auto-generated', 'false');
+                }
+            }
+        }
+
+        // Track manual input
+        function trackManualInput() {
+            const itemCodeInput = document.getElementById('itemCodeInput');
+            itemCodeInput.addEventListener('input', function() {
+                // Mark as manual input jika user mengetik
+                if (this.value && this.value !== 'Loading...') {
+                    this.setAttribute('data-auto-generated', 'false');
+                }
+            });
+        }
+
+
         // Initialize on page load if there's old value
         document.addEventListener('DOMContentLoaded', function() {
             const hiddenPrice = document.getElementById('purchase_price');
@@ -194,6 +281,15 @@
             
             // Initialize custom location toggle
             toggleCustomLocation();
+            
+            // Initialize item code functionality
+            trackManualInput();
+            
+            // Update code preview if category already selected (old value)
+            const categorySelect = document.getElementById('categorySelect');
+            if (categorySelect.value) {
+                updateItemCodePreview();
+            }
         });
     </script>
     @endpush

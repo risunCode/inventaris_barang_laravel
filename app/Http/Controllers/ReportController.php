@@ -50,16 +50,20 @@ class ReportController extends Controller implements HasMiddleware
             $query->where('condition', $request->condition);
         }
 
+        if ($request->filled('year')) {
+            $query->whereYear('created_at', $request->year);
+        }
+
         $commodities = $query->orderBy('name')->get();
         $categories = Category::active()->get();
         $locations = Location::active()->get();
 
-        if ($request->has('print')) {
+        if ($request->has('print') || $request->get('export') === 'pdf') {
             $pdf = Pdf::loadView('reports.pdf.inventory', [
                 'commodities' => $commodities,
                 'title' => 'Laporan Inventaris Barang',
                 'date' => now()->format('d F Y'),
-                'filters' => $request->only(['category_id', 'location_id', 'condition']),
+                'filters' => $request->only(['category_id', 'location_id', 'condition', 'year']),
             ]);
             $pdf->setPaper('A4', 'landscape');
             return $pdf->stream('laporan-inventaris.pdf');
@@ -81,7 +85,7 @@ class ReportController extends Controller implements HasMiddleware
         $totalValue = Commodity::sum('purchase_price');
         $totalItems = Commodity::count();
 
-        if ($request->has('print')) {
+        if ($request->has('print') || $request->get('export') === 'pdf') {
             $pdf = Pdf::loadView('reports.pdf.by-category', [
                 'categories' => $categories,
                 'totalValue' => $totalValue,
@@ -109,7 +113,7 @@ class ReportController extends Controller implements HasMiddleware
         $totalValue = Commodity::sum('purchase_price');
         $totalItems = Commodity::count();
 
-        if ($request->has('print')) {
+        if ($request->has('print') || $request->get('export') === 'pdf') {
             $pdf = Pdf::loadView('reports.pdf.by-location', [
                 'locations' => $locations,
                 'totalValue' => $totalValue,
@@ -129,21 +133,48 @@ class ReportController extends Controller implements HasMiddleware
      */
     public function byCondition(Request $request)
     {
-        $conditions = [
-            'baik' => Commodity::where('condition', 'baik')->count(),
-            'rusak_ringan' => Commodity::where('condition', 'rusak_ringan')->count(),
-            'rusak_berat' => Commodity::where('condition', 'rusak_berat')->count(),
-        ];
-
+        // Get all commodities untuk detailed list
         $commodities = Commodity::with(['category', 'location'])
             ->orderBy('condition')
             ->orderBy('name')
             ->get()
             ->groupBy('condition');
 
-        if ($request->has('print')) {
+        // Calculate real counts dari actual data
+        $conditionStats = [
+            'baik' => $commodities->get('baik', collect())->count(),
+            'rusak_ringan' => $commodities->get('rusak_ringan', collect())->count(),
+            'rusak_berat' => $commodities->get('rusak_berat', collect())->count(),
+        ];
+
+        // Add total counts untuk summary
+        $totalValue = Commodity::sum('purchase_price');
+        $totalItems = Commodity::count();
+
+        // Get data per kategori untuk detail table
+        $categoryConditions = Category::withCount([
+            'commodities',
+            'commodities as baik' => function ($query) {
+                $query->where('condition', 'baik');
+            },
+            'commodities as rusak_ringan' => function ($query) {
+                $query->where('condition', 'rusak_ringan');
+            },
+            'commodities as rusak_berat' => function ($query) {
+                $query->where('condition', 'rusak_berat');
+            }
+        ])
+        ->having('commodities_count', '>', 0) // Hanya kategori yang punya barang
+        ->orderBy('name')
+        ->get()
+        ->map(function ($category) {
+            $category->total_items = $category->commodities_count;
+            return $category;
+        });
+
+        if ($request->has('print') || $request->get('export') === 'pdf') {
             $pdf = Pdf::loadView('reports.pdf.by-condition', [
-                'conditions' => $conditions,
+                'conditionStats' => $conditionStats,
                 'commodities' => $commodities,
                 'title' => 'Laporan Barang Per Kondisi',
                 'date' => now()->format('d F Y'),
@@ -152,7 +183,7 @@ class ReportController extends Controller implements HasMiddleware
             return $pdf->stream('laporan-per-kondisi.pdf');
         }
 
-        return view('reports.by-condition', compact('conditions', 'commodities'));
+        return view('reports.by-condition', compact('conditionStats', 'commodities', 'totalValue', 'totalItems', 'categoryConditions'));
     }
 
     /**
@@ -176,7 +207,7 @@ class ReportController extends Controller implements HasMiddleware
 
         $transfers = $query->orderBy('created_at', 'desc')->get();
 
-        if ($request->has('print')) {
+        if ($request->has('print') || $request->get('export') === 'pdf') {
             $pdf = Pdf::loadView('reports.pdf.transfers', [
                 'transfers' => $transfers,
                 'title' => 'Laporan Transfer Barang',
@@ -210,7 +241,7 @@ class ReportController extends Controller implements HasMiddleware
 
         $disposals = $query->orderBy('created_at', 'desc')->get();
 
-        if ($request->has('print')) {
+        if ($request->has('print') || $request->get('export') === 'pdf') {
             $pdf = Pdf::loadView('reports.pdf.disposals', [
                 'disposals' => $disposals,
                 'title' => 'Laporan Penghapusan Barang',
@@ -241,7 +272,7 @@ class ReportController extends Controller implements HasMiddleware
         $logs = $query->orderBy('maintenance_date', 'desc')->get();
         $totalCost = $logs->sum('cost');
 
-        if ($request->has('print')) {
+        if ($request->has('print') || $request->get('export') === 'pdf') {
             $pdf = Pdf::loadView('reports.pdf.maintenance', [
                 'logs' => $logs,
                 'totalCost' => $totalCost,

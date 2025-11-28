@@ -22,3 +22,7 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Exclude backup/additional project folders
+/inventaris_barang_laravel-0.0.2-beta
+/E-Surat-Perkim

@@ -27,15 +27,19 @@ class User extends Authenticatable
         'phone',
         'avatar',
         'birth_date',
+        'father_name',
         'is_active',
         'role',
         'referral_code',
         'referred_by',
+        'security_question', // E-Surat-Perkim style field
+        'security_answer', // E-Surat-Perkim style field
         'security_question_1',
         'security_answer_1',
         'security_question_2',
         'security_answer_2',
         'custom_security_question',
+        'custom_security_question_2',
         'custom_security_answer',
         'security_setup_completed',
     ];
@@ -106,7 +110,41 @@ class User extends Authenticatable
      */
     public function hasSecurityQuestion(): bool
     {
-        return $this->security_setup_completed && !empty($this->security_question_1) && !empty($this->security_answer_1);
+        // More robust checking - handle different data types
+        $hasCompleted = (bool) $this->security_setup_completed;
+        $hasQuestion = !is_null($this->security_question_1) && $this->security_question_1 !== '';
+        $hasAnswer = !is_null($this->security_answer_1) && $this->security_answer_1 !== '';
+        
+        return $hasCompleted && $hasQuestion && $hasAnswer;
+    }
+
+    /**
+     * Cek apakah user sudah setup security untuk forgot-password (E-Surat-Perkim style).
+     * Required: birth date + security question 1 + answer 1.
+     */
+    public function hasSecurityQuestions(): bool
+    {
+        // Debug: Log nilai actual untuk troubleshooting
+        $hasCompleted = (bool) $this->security_setup_completed;
+        $hasBirthDate = !is_null($this->birth_date) && $this->birth_date !== '';
+        $hasQuestion1 = !is_null($this->security_question_1) && $this->security_question_1 !== '';
+        $hasAnswer1 = !is_null($this->security_answer_1) && $this->security_answer_1 !== '';
+        
+        \Log::info('Security Check Debug:', [
+            'user_id' => $this->id,
+            'security_setup_completed' => $this->security_setup_completed,
+            'birth_date' => $this->birth_date,
+            'security_question_1' => $this->security_question_1,
+            'security_answer_1' => !is_null($this->security_answer_1) && $this->security_answer_1 !== '' ? 'SET' : 'EMPTY',
+            'hasCompleted' => $hasCompleted,
+            'hasBirthDate' => $hasBirthDate,
+            'hasQuestion1' => $hasQuestion1,
+            'hasAnswer1' => $hasAnswer1,
+            'final_result' => $hasCompleted && $hasBirthDate && $hasQuestion1 && $hasAnswer1
+        ]);
+        
+        // Forgot password butuh: birth date + security question 1 + answer 1 (E-Surat-Perkim style)
+        return $hasCompleted && $hasBirthDate && $hasQuestion1 && $hasAnswer1;
     }
 
     /**

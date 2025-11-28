@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\Commodity;
 use App\Models\Disposal;
+use App\Models\User;
+use App\Notifications\DisposalRequested;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
 class DisposalController extends Controller implements HasMiddleware
@@ -94,6 +97,10 @@ class DisposalController extends Controller implements HasMiddleware
         ]);
 
         ActivityLog::log('created', "Mengajukan penghapusan: {$disposal->disposal_number}", $disposal);
+
+        // Send notification to admin users about disposal request
+        $adminUsers = User::where('role', 'admin')->get();
+        Notification::send($adminUsers, new DisposalRequested($disposal, Auth::user()));
 
         return redirect()->route('disposals.show', $disposal)
             ->with('success', 'Pengajuan penghapusan berhasil dibuat.');

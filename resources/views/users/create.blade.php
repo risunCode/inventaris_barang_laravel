@@ -39,13 +39,26 @@
                     </div>
 
                     <div class="border-t border-gray-200 pt-4">
-                        <p class="text-sm font-medium text-gray-700 mb-3">Pertanyaan Keamanan</p>
+                        <p class="text-sm font-medium text-gray-700 mb-3">Keamanan Akun</p>
 
-                        <x-form.select label="Pertanyaan 1" name="security_question_1" :options="$securityQuestions" required />
-                        <x-form.input label="Jawaban 1" name="security_answer_1" required class="mt-2" />
-
-                        <x-form.select label="Pertanyaan 2" name="security_question_2" :options="$securityQuestions" required class="mt-4" />
-                        <x-form.input label="Jawaban 2" name="security_answer_2" required class="mt-2" />
+                        <x-form.input label="Tanggal Lahir" name="birth_date" type="date" required />
+                        
+                        <div class="mt-4">
+                            <label class="form-label">Pertanyaan Keamanan</label>
+                            <select name="security_question_1" class="form-select" required>
+                                <option value="">Pilih...</option>
+                                @foreach($securityQuestions as $key => $question)
+                                <option value="{{ $key }}">{{ $question }}</option>
+                                @endforeach
+                                <option value="0">Buat pertanyaan custom...</option>
+                            </select>
+                        </div>
+                        
+                        <div id="customQuestionWrapper" class="hidden mt-2">
+                            <x-form.input label="Pertanyaan Custom" name="custom_security_question" />
+                        </div>
+                        
+                        <x-form.input label="Jawaban" name="security_answer_1" required class="mt-2" />
                     </div>
                 </div>
 
@@ -56,4 +69,18 @@
             </form>
         </div>
     </div>
+
+    <script>
+        function toggleCustomQuestion() {
+            const select = document.querySelector('select[name="security_question_1"]');
+            const wrapper = document.getElementById('customQuestionWrapper');
+            if (select.value === '0') {
+                wrapper.classList.remove('hidden');
+            } else {
+                wrapper.classList.add('hidden');
+            }
+        }
+        
+        document.querySelector('select[name="security_question_1"]').addEventListener('change', toggleCustomQuestion);
+    </script>
 </x-app-layout>

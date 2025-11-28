@@ -8,6 +8,85 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ? $title . ' - ' : '' }}{{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <!-- Force Light Theme for Auth Pages -->
+    <style>
+        body {
+            color-scheme: light !important;
+        }
+        
+        .bg-gray-100 {
+            background-color: #f3f4f6 !important;
+        }
+        
+        .bg-white {
+            background-color: #ffffff !important;
+        }
+        
+        .text-gray-900 {
+            color: #1f2937 !important;
+        }
+        
+        .text-gray-700 {
+            color: #374151 !important;
+        }
+        
+        .text-gray-600 {
+            color: #4b5563 !important;
+        }
+        
+        .text-gray-500 {
+            color: #6b7280 !important;
+        }
+        
+        .text-gray-400 {
+            color: #9ca3af !important;
+        }
+        
+        .border-gray-200 {
+            border-color: #e5e7eb !important;
+        }
+        
+        .border-gray-300 {
+            border-color: #d1d5db !important;
+        }
+        
+        .card {
+            background-color: #ffffff !important;
+            border-color: #e5e7eb !important;
+            color: #1f2937 !important;
+        }
+        
+        .input,
+        .form-input {
+            background-color: #ffffff !important;
+            border-color: #d1d5db !important;
+            color: #1f2937 !important;
+        }
+        
+        .input::placeholder,
+        .form-input::placeholder {
+            color: #6b7280 !important;
+        }
+        
+        .input:focus,
+        .form-input:focus {
+            border-color: #3b82f6 !important;
+        }
+        
+        .form-label {
+            color: #374151 !important; /* text-gray-700 */
+        }
+        
+        .form-error {
+            color: #dc2626 !important; /* text-red-600 */
+        }
+        
+        /* Override any dark mode styles */
+        * {
+            color-scheme: light !important;
+        }
+    </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-md">
@@ -30,8 +109,37 @@
 
         <!-- Footer -->
         <p class="text-center text-xs text-gray-500 mt-6">
-            &copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
+            &copy; {{ date('Y') }} {{ config('app.name') }} v{{ config('app.version') }}. All rights reserved.
         </p>
     </div>
+
+    <script>
+        // Toggle Password Visibility
+        function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            const button = input.parentElement.querySelector('button');
+            const showIcon = button.querySelector('.password-icon-show');
+            const hideIcon = button.querySelector('.password-icon-hide');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                showIcon.classList.add('hidden');
+                hideIcon.classList.remove('hidden');
+            } else {
+                input.type = 'password';
+                showIcon.classList.remove('hidden');
+                hideIcon.classList.add('hidden');
+            }
+        }
+        
+        // Legacy function for reset-password page (if used)
+        function togglePassword(inputId, iconId) {
+            togglePasswordVisibility(inputId);
+        }
+    </script>
+
+    @stack('scripts')
 </body>
 </html>

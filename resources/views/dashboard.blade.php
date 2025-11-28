@@ -39,7 +39,13 @@
                 </div>
                 <div>
                     <p class="text-xs" style="color: var(--text-secondary);">Total Nilai</p>
-                    <p class="text-lg font-bold" style="color: var(--text-primary);">Rp {{ number_format($stats['total_value'] / 1000000, 1) }}M</p>
+                    @php
+                        $currency = \App\Helpers\NumberHelper::formatCurrency($stats['total_value']);
+                    @endphp
+                    <p class="text-lg font-bold cursor-help" style="color: var(--text-primary);" 
+                       title="Rp {{ ucwords(trim(\App\Helpers\NumberHelper::terbilang($stats['total_value']))) }} Rupiah">
+                       {{ $currency['formatted'] }}
+                    </p>
                 </div>
             </div>
         </div>
@@ -185,14 +191,16 @@
                 <table class="w-full text-xs">
                     <thead style="background-color: var(--bg-input);">
                         <tr>
+                            <th class="px-2 py-2 text-center font-medium w-8" style="color: var(--text-secondary);">No</th>
                             <th class="px-3 py-2 text-left font-medium" style="color: var(--text-secondary);">Kode</th>
                             <th class="px-3 py-2 text-left font-medium" style="color: var(--text-secondary);">Nama</th>
                             <th class="px-3 py-2 text-left font-medium" style="color: var(--text-secondary);">Kondisi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y" style="border-color: var(--border-color);">
-                        @forelse($recentCommodities as $commodity)
+                        @forelse($recentCommodities as $index => $commodity)
                         <tr>
+                            <td class="px-2 py-2 text-center font-medium" style="color: var(--text-secondary);">{{ $index + 1 }}</td>
                             <td class="px-3 py-2 font-mono" style="color: var(--text-secondary);">{{ $commodity->item_code }}</td>
                             <td class="px-3 py-2">
                                 <a href="{{ route('commodities.show', $commodity) }}" class="hover:underline" style="color: var(--accent-color);">
@@ -203,7 +211,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="3" class="px-3 py-6 text-center" style="color: var(--text-secondary);">Belum ada data</td>
+                            <td colspan="4" class="px-3 py-6 text-center" style="color: var(--text-secondary);">Belum ada data</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -274,8 +282,61 @@
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // SweetAlert success notifications
+            @if(session('success'))
+                @if(str_contains(session('success'), 'Setup keamanan berhasil'))
+                    // Special welcome for security setup completion
+                    Swal.fire({
+                        icon: 'success',
+                        title: '🎉 Setup Keamanan Berhasil!',
+                        html: 
+                            '<div class="text-left">' +
+                            '<p class="mb-2"><strong>Selamat datang di Dashboard!</strong></p>' +
+                            '<p class="text-sm text-gray-600">Akun Anda sekarang sudah aman dan siap digunakan.</p>' +
+                            '<p class="text-sm text-blue-600 mt-2"><em>Anda dapat mulai mengelola inventaris sekarang.</em></p>' +
+                            '</div>',
+                        timer: 6000,
+                        showConfirmButton: true,
+                        confirmButtonColor: '#10b981',
+                        confirmButtonText: 'Mulai!',
+                        showClass: {
+                            popup: 'animate__animated animate__bounceIn'
+                        }
+                    });
+                @else
+                    // Regular success messages
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: '{{ session('success') }}',
+                        timer: 4000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end',
+                        showClass: {
+                            popup: 'animate__animated animate__fadeInDown'
+                        },
+                        hideClass: {
+                            popup: 'animate__animated animate__fadeOutUp'
+                        }
+                    });
+                @endif
+            @endif
+
+            @if(session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: '{{ session('error') }}',
+                    timer: 5000,
+                    showConfirmButton: true,
+                    confirmButtonColor: '#dc2626'
+                });
+            @endif
+
             // Kondisi Chart - Doughnut
             const conditionCtx = document.getElementById('conditionChart');
             if (conditionCtx) {

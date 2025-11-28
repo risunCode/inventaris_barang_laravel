@@ -26,7 +26,11 @@ class NotificationController extends Controller implements HasMiddleware
     {
         $perPage = min($request->get('per_page', 20), 100); // Max 100 per page
         $notifications = Auth::user()->notifications()->paginate($perPage);
-        return view('notifications.index', compact('notifications'));
+        $unreadCount = Auth::user()->unreadNotifications()->count();
+        $readCount = Auth::user()->readNotifications()->count();
+        $totalCount = $notifications->total();
+        
+        return view('notifications.index', compact('notifications', 'unreadCount', 'readCount', 'totalCount'));
     }
 
     /**

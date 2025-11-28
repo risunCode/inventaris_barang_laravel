@@ -6,6 +6,74 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Setup Keamanan - {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <!-- Force Light Theme for Auth Pages -->
+    <style>
+        body {
+            color-scheme: light !important;
+        }
+        
+        .bg-gray-100 {
+            background-color: #f3f4f6 !important;
+        }
+        
+        .bg-white {
+            background-color: #ffffff !important;
+        }
+        
+        .text-gray-900 {
+            color: #1f2937 !important;
+        }
+        
+        .text-gray-700 {
+            color: #374151 !important;
+        }
+        
+        .text-gray-600 {
+            color: #4b5563 !important;
+        }
+        
+        .text-gray-500 {
+            color: #6b7280 !important;
+        }
+        
+        .text-gray-400 {
+            color: #9ca3af !important;
+        }
+        
+        .border-gray-200 {
+            border-color: #e5e7eb !important;
+        }
+        
+        .border-gray-300 {
+            border-color: #d1d5db !important;
+        }
+        
+        .card {
+            background-color: #ffffff !important;
+            border-color: #e5e7eb !important;
+            color: #1f2937 !important;
+        }
+        
+        .input {
+            background-color: #ffffff !important;
+            border-color: #d1d5db !important;
+            color: #1f2937 !important;
+        }
+        
+        .input::placeholder {
+            color: #6b7280 !important;
+        }
+        
+        .input:focus {
+            border-color: #3b82f6 !important;
+        }
+        
+        /* Override any dark mode styles */
+        * {
+            color-scheme: light !important;
+        }
+    </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
     <!-- Top Header -->
@@ -137,7 +205,7 @@
                 <div class="flex items-center gap-4">
                     <span>{{ config('app.name') }}</span>
                     <span class="text-gray-300">|</span>
-                    <span class="text-xs bg-gray-100 px-2 py-1 rounded">v0.0.5-beta</span>
+                    <span class="text-xs bg-gray-100 px-2 py-1 rounded">v{{ config('sibarang.version', '0.0.7-beta') }}</span>
                 </div>
             </div>
         </div>
@@ -156,6 +224,34 @@
     }
 
     // SweetAlert notifications
+    
+    // Show security setup warning on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            icon: 'info',
+            title: 'Setup Keamanan Wajib!',
+            html: 
+                '<div class="text-left">' +
+                '<p class="mb-3"><strong>Anda harus menyelesaikan setup keamanan ini.</strong></p>' +
+                '<p class="mb-3 text-sm text-gray-600">Sistem ini tidak memiliki OTP verifikasi karena aplikasi dirancang untuk penggunaan internal saja, tidak public.</p>' +
+                '<ul class="text-sm text-gray-600 space-y-1 ml-4">' +
+                '<li>• Tanggal lahir untuk verifikasi identitas</li>' +
+                '<li>• Pertanyaan keamanan untuk pemulihan akun</li>' +
+                '<li>• Jawaban yang aman dan mudah diingat</li>' +
+                '</ul>' +
+                '<p class="mt-3 text-sm text-blue-600"><em>Setup ini hanya dilakukan sekali saat registrasi.</em></p>' +
+                '</div>',
+            confirmButtonColor: '#3b82f6',
+            confirmButtonText: 'Saya Mengerti',
+            showClass: {
+                popup: 'animate__animated animate__fadeInDown'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__fadeOutUp'
+            }
+        });
+    });
+
     @if(session('success'))
     Swal.fire({
         icon: 'success',
@@ -171,12 +267,16 @@
     @if(session('error'))
     Swal.fire({
         icon: 'error',
-        title: 'Error!',
-        text: '{{ session('error') }}',
-        showConfirmButton: false,
-        timer: 4000,
-        toast: true,
-        position: 'bottom-end'
+        title: 'Gagal!',
+        @if(app()->environment('local', 'testing'))
+            html: '<strong>DEBUG MODE:</strong><br>{{ session('error') }}',
+            timer: 8000,
+        @else
+            text: '{{ session('error') }}',
+            timer: 5000,
+        @endif
+        showConfirmButton: true,
+        confirmButtonColor: '#dc2626'
     });
     @endif
 
@@ -188,10 +288,28 @@
     
     Swal.fire({
         icon: 'error',
-        title: 'Ada kesalahan!',
-        html: errorMessages.join('<br>'),
-        confirmButtonText: 'OK'
+        title: 'Validasi Gagal!',
+        @if(app()->environment('local', 'testing'))
+            html: '<strong>DEBUG MODE - Validation Errors:</strong><br>' + errorMessages.join('<br>'),
+            timer: 10000,
+        @else
+            html: errorMessages.join('<br>'),
+            timer: 5000,
+        @endif
+        showConfirmButton: true,
+        confirmButtonColor: '#dc2626'
     });
+    @endif
+
+    // Debug info for local environment
+    @if(app()->environment('local', 'testing'))
+        console.log('=== SECURITY SETUP DEBUG ===');
+        console.log('Environment: {{ app()->environment() }}');
+        console.log('Session errors:', {!! json_encode(session()->all()) !!});
+        console.log('Validation errors:', {!! json_encode($errors->all()) !!});
+        @if(session('error'))
+            console.log('Error message:', '{{ session('error') }}');
+        @endif
     @endif
     </script>
 </body>

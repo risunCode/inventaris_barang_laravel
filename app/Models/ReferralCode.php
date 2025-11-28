@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 class ReferralCode extends Model
@@ -37,6 +38,18 @@ class ReferralCode extends Model
         static::creating(function ($referralCode) {
             if (empty($referralCode->code)) {
                 $referralCode->code = self::generateUniqueCode();
+            }
+            
+            // Auto-set creator to current user for security
+            if (auth()->check() && empty($referralCode->created_by)) {
+                $referralCode->created_by = auth()->id();
+            }
+        });
+
+        // Global scope for ownership security
+        static::addGlobalScope('owner', function ($builder) {
+            if (auth()->check() && !Gate::allows('referral-codes.manage')) {
+                $builder->where('created_by', auth()->id());
             }
         });
     }
@@ -130,5 +143,27 @@ class ReferralCode extends Model
     public function incrementUsage(): void
     {
         $this->increment('used_count');
+    }
+
+    /**
+     * Check if user can manage this specific referral code.
+     */
+    public function canBeManagedBy($user): bool
+    {
+        // Admin can manage all codes
+        if ($user->role === 'admin') {
+            return true;
+        }
+        
+        // Users can only manage their own codes
+        return $this->created_by === $user->id;
+    }
+
+    /**
+     * Scope to get codes without global scope (for admin operations).
+     */
+    public function scopeWithoutOwnerScope($query)
+    {
+        return $query->withoutGlobalScope('owner');
     }
 }

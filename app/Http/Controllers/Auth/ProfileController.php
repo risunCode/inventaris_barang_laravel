@@ -102,6 +102,14 @@ class ProfileController extends Controller
 
             $user->update($validated);
 
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true, 
+                    'message' => 'Profil berhasil diperbarui.',
+                    'avatar_url' => $user->avatar_url
+                ]);
+            }
+
             return back()->with('success', 'Profil berhasil diperbarui.');
         } catch (\Exception $e) {
             Log::error('Profile update failed', [

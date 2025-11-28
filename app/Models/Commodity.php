@@ -49,33 +49,78 @@ class Commodity extends Model
         // Auto-generate item_code jika kosong
         static::creating(function ($model) {
             if (empty($model->item_code)) {
-                $model->item_code = self::generateItemCode();
+                $model->item_code = self::generateItemCode($model->category_id);
             }
         });
     }
 
     /**
-     * Generate kode barang otomatis.
-     * Format: INV-[TAHUN]-[URUT 4 DIGIT]
+     * Generate kode barang otomatis berdasarkan kategori.
+     * Format: [KODE_KATEGORI]-[TAHUN]-[URUT 4 DIGIT]
+     * Contoh: ATK-2025-0001, ELK-2025-0001
+     * Default: INV-2025-0001 (jika kategori tidak punya kode)
      */
-    public static function generateItemCode(): string
+    public static function generateItemCode(?int $categoryId = null): string
     {
         $year = date('Y');
-        $prefix = "INV-{$year}-";
-
-        $lastItem = self::withTrashed()
-            ->where('item_code', 'like', $prefix . '%')
-            ->orderBy('item_code', 'desc')
-            ->first();
-
-        if ($lastItem) {
-            $lastNumber = (int) substr($lastItem->item_code, -4);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
+        $categoryCode = 'INV'; // Default jika tidak ada kategori
+        
+        // Ambil kode kategori jika ada
+        if ($categoryId) {
+            $category = Category::find($categoryId);
+            if ($category && !empty($category->code)) {
+                $categoryCode = strtoupper($category->code);
+            }
         }
+        
+        $prefix = "{$categoryCode}-{$year}-";
+        
+        // Lock untuk mencegah race condition
+        return \DB::transaction(function () use ($prefix) {
+            $maxAttempts = 10; // Maksimal 10 attempt untuk cari kode unik
+            
+            for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
+                // Cari nomor terakhir dengan locking
+                $lastItem = self::withTrashed()
+                    ->where('item_code', 'like', $prefix . '%')
+                    ->lockForUpdate() // Row-level locking
+                    ->orderBy('item_code', 'desc')
+                    ->first();
 
-        return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+                if ($lastItem) {
+                    $lastNumber = (int) substr($lastItem->item_code, -4);
+                    $newNumber = $lastNumber + 1;
+                } else {
+                    $newNumber = 1;
+                }
+
+                $generatedCode = $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+                
+                // Cek apakah kode sudah ada (double check)
+                $exists = self::withTrashed()
+                    ->where('item_code', $generatedCode)
+                    ->exists();
+                
+                if (!$exists) {
+                    return $generatedCode; // Kode unik ditemukan
+                }
+                
+                // Jika kode sudah ada, coba lagi dengan +1
+            }
+            
+            // Fallback: jika setelah 10 attempt masih duplikat, gunakan timestamp
+            $fallbackCode = $prefix . str_pad(time() % 10000, 4, '0', STR_PAD_LEFT);
+            
+            return $fallbackCode;
+        });
+    }
+    
+    /**
+     * Generate preview kode untuk form (tanpa menyimpan).
+     */
+    public static function previewItemCode(?int $categoryId = null): string
+    {
+        return self::generateItemCode($categoryId);
     }
 
     /**

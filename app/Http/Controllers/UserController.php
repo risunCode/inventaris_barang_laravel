@@ -20,7 +20,7 @@ class UserController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:users.view', only: ['index', 'show']),
+            new Middleware('permission:users.manage', only: ['index', 'show']), // Admin only for viewing
             new Middleware('permission:users.create', only: ['create', 'store']),
             new Middleware('permission:users.edit', only: ['edit', 'update']),
             new Middleware('permission:users.delete', only: ['destroy']),
@@ -32,7 +32,22 @@ class UserController extends Controller implements HasMiddleware
      */
     public function index(Request $request): View
     {
+        // HARDCODE SECURITY CHECK - Admin only!
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Anda tidak memiliki izin untuk mengakses halaman ini. Silakan gunakan halaman Kode Referral.');
+        }
+
         $query = User::with(['referrer']);
+
+        // ROLE-BASED FILTERING - Security fix
+        if (auth()->user()->role === 'user') {
+            // Users can only see themselves
+            $query->where('id', auth()->id());
+        } elseif (auth()->user()->role === 'staff') {
+            // Staff can only see users (not admin or other staff)
+            $query->where('role', 'user');
+        }
+        // Admin can see everyone (no filtering)
 
         // Search
         if ($request->filled('search')) {
@@ -44,8 +59,8 @@ class UserController extends Controller implements HasMiddleware
             });
         }
 
-        // Filter by role
-        if ($request->filled('role')) {
+        // Filter by role (only for admin - staff already filtered above)
+        if (auth()->user()->role === 'admin' && $request->filled('role')) {
             $query->where('role', $request->role);
         }
 
@@ -57,15 +72,29 @@ class UserController extends Controller implements HasMiddleware
         $perPage = min($request->get('per_page', 15), 100); // Max 100 per page
         $users = $query->orderBy('name')->paginate($perPage)->withQueryString();
         
-        $roles = [
-            'admin' => 'Administrator',
-            'staff' => 'Staff',
-            'user' => 'User'
-        ];
-
-        // Stats
-        $adminCount = User::where('role', 'admin')->count();
-        $canAddAdmin = $adminCount < 3;
+        // ROLE-BASED OPTIONS - Security fix
+        if (auth()->user()->role === 'admin') {
+            $roles = [
+                'admin' => 'Administrator',
+                'staff' => 'Staff',
+                'user' => 'User'
+            ];
+            // Admin can see admin count
+            $adminCount = User::where('role', 'admin')->count();
+            $canAddAdmin = $adminCount < 3;
+        } elseif (auth()->user()->role === 'staff') {
+            // Staff can only create users
+            $roles = [
+                'user' => 'User'
+            ];
+            $adminCount = 0; // Hidden from staff
+            $canAddAdmin = false;
+        } else {
+            // User shouldn't be here, but just in case
+            $roles = [];
+            $adminCount = 0;
+            $canAddAdmin = false;
+        }
 
         return view('users.index', compact('users', 'roles', 'adminCount', 'canAddAdmin'));
     }
@@ -75,11 +104,23 @@ class UserController extends Controller implements HasMiddleware
      */
     public function create(): View
     {
-        $roles = [
-            'admin' => 'Administrator',
-            'staff' => 'Staff',
-            'user' => 'User'
-        ];
+        // ROLE-BASED OPTIONS - Security fix
+        if (auth()->user()->role === 'admin') {
+            $roles = [
+                'admin' => 'Administrator',
+                'staff' => 'Staff',
+                'user' => 'User'
+            ];
+        } elseif (auth()->user()->role === 'staff') {
+            // Staff can only create users (no role escalation)
+            $roles = [
+                'user' => 'User'
+            ];
+        } else {
+            // User shouldn't be here
+            $roles = [];
+        }
+        
         $securityQuestions = config('security_questions.questions');
 
         return view('users.create', compact('roles', 'securityQuestions'));
@@ -90,19 +131,44 @@ class UserController extends Controller implements HasMiddleware
      */
     public function store(Request $request)
     {
-        // Simplified validation for modal
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Password::defaults()],
-            'phone' => ['nullable', 'string', 'regex:/^(\+62|0)[0-9]{9,12}$/', 'max:20'],
-            'role' => ['required', 'in:admin,staff,user'],
-            'referral_code' => ['nullable', 'string', 'exists:referral_codes,code'],
-            'is_active' => ['boolean'],
-        ]);
+        // ROLE-BASED VALIDATION - Security fix
+        if (auth()->user()->role === 'staff') {
+            // Staff can only create users
+            $validated = $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'email', 'max:255', 'unique:users'],
+                'password' => ['required', 'confirmed', Password::defaults()],
+                'phone' => ['nullable', 'string', 'regex:/^(\+62|0)[0-9]{9,12}$/', 'max:20'],
+                'role' => ['required', 'in:user'], // STAFF CAN ONLY CREATE USERS
+                'referral_code' => ['nullable', 'string', 'exists:referral_codes,code'],
+                'is_active' => ['boolean'],
+                'birth_date' => ['required', 'date', 'before:today'],
+                'security_question_1' => ['required', 'in:0,1,2,3,4,5,6,7,8,9,10'],
+                'custom_security_question' => ['required_if:security_question_1,0', 'string', 'max:255'],
+                'security_answer_1' => ['required', 'string', 'min:3'],
+            ]);
+        } elseif (auth()->user()->role === 'admin') {
+            // Admin can create all roles (with limits)
+            $validated = $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'email', 'max:255', 'unique:users'],
+                'password' => ['required', 'confirmed', Password::defaults()],
+                'phone' => ['nullable', 'string', 'regex:/^(\+62|0)[0-9]{9,12}$/', 'max:20'],
+                'role' => ['required', 'in:admin,staff,user'],
+                'referral_code' => ['nullable', 'string', 'exists:referral_codes,code'],
+                'is_active' => ['boolean'],
+                'birth_date' => ['required', 'date', 'before:today'],
+                'security_question_1' => ['required', 'in:0,1,2,3,4,5,6,7,8,9,10'],
+                'custom_security_question' => ['required_if:security_question_1,0', 'string', 'max:255'],
+                'security_answer_1' => ['required', 'string', 'min:3'],
+            ]);
+        } else {
+            // Users shouldn't be creating users
+            abort(403, 'Anda tidak memiliki izin untuk membuat pengguna.');
+        }
 
-        // Cek limit admin (max 3)
-        if ($validated['role'] === 'admin') {
+        // Cek limit admin (max 3) - only for admin
+        if (auth()->user()->role === 'admin' && $validated['role'] === 'admin') {
             $adminCount = User::where('role', 'admin')->count();
             if ($adminCount >= 3) {
                 $errorMsg = 'Jumlah Admin sudah mencapai batas maksimal (3 orang).';
@@ -129,15 +195,22 @@ class UserController extends Controller implements HasMiddleware
             }
         }
 
+        // Handle security question
+        $questionValue = (int) $validated['security_question_1'];
+        
         $userData = [
             'name' => trim($validated['name']),
             'email' => strtolower(trim($validated['email'])),
             'password' => Hash::make($validated['password']),
-            'phone' => $validated['phone'] ? trim($validated['phone']) : null,
+            'phone' => $validated['phone'] ?? null,
             'role' => $validated['role'],
             'is_active' => $request->boolean('is_active', true),
             'referred_by' => $referrerId,
-            'security_setup_completed' => false, // User harus setup security saat login pertama
+            'birth_date' => $validated['birth_date'],
+            'security_question_1' => $questionValue, // Integer (0 for custom)
+            'security_answer_1' => Hash::make(strtolower(trim($validated['security_answer_1']))),
+            'custom_security_question' => $questionValue === 0 ? trim($validated['custom_security_question']) : null,
+            'security_setup_completed' => true, // Admin/staff creates user with completed security
         ];
 
         try {
@@ -152,6 +225,14 @@ class UserController extends Controller implements HasMiddleware
                 ]);
             }
 
+            // ROLE-BASED REDIRECT - Fix navigation issue
+            if (auth()->user()->role === 'staff') {
+                // Staff should go to referral codes, not users
+                return redirect()->route('referral-codes.index')
+                    ->with('success', 'User berhasil ditambahkan. Kode referral: ' . $user->referral_code);
+            }
+            
+            // Admin goes to users management
             return redirect()->route('users.index')
                 ->with('success', 'Pengguna berhasil ditambahkan. Kode referral: ' . $user->referral_code);
         } catch (\Exception $e) {

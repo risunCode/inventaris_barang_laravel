@@ -78,11 +78,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Additional missing permissions
         Gate::define('users.create', function ($user) {
-            return $user->is_active && $user->role === 'admin';
+            return $user->is_active && in_array($user->role, ['admin', 'staff']);
         });
 
         Gate::define('users.edit', function ($user) {
-            return $user->is_active && $user->role === 'admin';
+            return $user->is_active && in_array($user->role, ['admin', 'staff']);
         });
 
         Gate::define('users.delete', function ($user) {
@@ -162,6 +162,16 @@ class AppServiceProvider extends ServiceProvider
         // Referral codes management (consistent naming)
         Gate::define('referral-codes.manage', function ($user) {
             return $user->is_active && $user->role === 'admin';
+        });
+
+        // Referral codes own access (view/edit/delete own codes only)
+        Gate::define('referral-codes.own', function ($user) {
+            return $user->is_active && in_array($user->role, ['admin', 'staff', 'user']);
+        });
+
+        // Referral codes create (all active users can create)
+        Gate::define('referral-codes.create', function ($user) {
+            return $user->is_active && in_array($user->role, ['admin', 'staff', 'user']);
         });
 
         // Dashboard access (all authenticated active users)
