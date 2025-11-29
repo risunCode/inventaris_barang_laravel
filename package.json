@@ -1,6 +1,6 @@
 {
     "name": "sibarang",
-    "version": "0.0.7-beta-007",
+    "version": "0.0.3-semi-stable",
     "description": "SIBARANG - Sistem Inventaris Barang",
     "private": true,
     "type": "module",

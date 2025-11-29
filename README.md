@@ -1,6 +1,6 @@
 # 🏢 SIBARANG - Sistem Inventaris Barang
 
-**Version: 0.0.7-beta-007** 🎉
+**Version: v0.0.3-semi-stable** 🎉
 
 Sistem manajemen inventaris barang yang komprehensif untuk instansi pemerintah, BUMN/BUMD, dan perusahaan swasta. Dibangun dengan Laravel 12 dan teknologi modern.
 
@@ -385,7 +385,7 @@ php artisan view:clear
 
 ## 📝 Latest Updates
 
-### v0.0.7-beta-007 (Current) - 28 Nov 2025
+### vv0.0.3-semi-stable (Current) - 28 Nov 2025
 
 **🎯 Major Highlights:**
 - ✅ **Enhanced Development Badge** - Professional indicator dengan network info

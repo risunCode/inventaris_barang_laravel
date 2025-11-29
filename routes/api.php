@@ -39,7 +39,7 @@ Route::middleware('throttle:10,1')->group(function () {
     Route::get('health', fn() => response()->json([
         'status' => 'ok',
         'timestamp' => now()->toISOString(),
-        'version' => config('app.version', '0.0.7-beta'),
+        'version' => config('app.version', '0.0.3-semi-stable'),
     ]))->name('api.health');
     
     Route::get('stats/public', fn() => response()->json([
