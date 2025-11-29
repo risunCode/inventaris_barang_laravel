@@ -38,8 +38,7 @@ Route::middleware('guest')->group(function () {
         Route::post('reset-password', [PasswordResetController::class, 'reset'])->name('password.update');
     });
 
-    // Validate Referral Code (API) - Rate limited separately
-    Route::middleware('throttle:10,1')->get('api/validate-referral', [RegisterController::class, 'validateReferral']);
+    // NOTE: Referral validation moved to /api/validate-referral (routes/api.php)
 
     // Password Reset Forms (no rate limit needed for GET)
     Route::get('forgot-password', [PasswordResetController::class, 'create'])->name('password.request');

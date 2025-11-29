@@ -275,9 +275,15 @@
 
 ## 🔌 API Routes
 
+**File:** `routes/api.php` (auto-prefixed with `/api`)
+
 | Method | URI | Name | Controller | Rate Limit |
 |--------|-----|------|------------|------------|
-| GET | `/api/validate-referral` | - | `RegisterController@validateReferral` | 10/min |
+| GET | `/api/validate-referral` | `api.validate-referral` | `RegisterController@validateReferral` | 10/min |
+
+**Note:** Other API-style routes remain in `web.php` for Blade template compatibility:
+- `/master/barang/preview-code` → `commodities.preview-code`
+- `/master/barang/ekspor` → `commodities.export`
 
 ---
 
@@ -386,9 +392,9 @@ Route::middleware('permission:referral-codes.manage')->group(function () {
 |--------------|--------------|------------------|--------|
 | Remove duplicate transfer routes | 7 routes | ~5% faster | ✅ DONE |
 | Secure debug route | 1 route (prod) | Security | ✅ DONE |
-| Enable route caching | - | ~200-500% faster | 📋 TODO |
-| Consolidate report routes | 4 routes | ~3% faster | 📋 OPTIONAL |
-| Move API routes | - | Clean code | 📋 OPTIONAL |
+| Move API routes to api.php | - | Clean code | ✅ DONE |
+| Enable route caching | - | ~200-500% faster | 📋 TODO (production) |
+| Consolidate report routes | 4 routes | ~3% faster | ⏭️ SKIPPED |
 
 **Optimization Applied:** 101 → 94 routes (~7% reduction) ✅
 
